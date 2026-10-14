@@ -1,5 +1,5 @@
 # Your No.1
 
-[Explore Your No.1](https://yourno1.com/en) — a free project-discovery pilot in English, Simplified Chinese, Spanish, Arabic and Japanese. Browse projects and their official links without creating an account.
+[Explore Your No.1](https://gfy0.github.io/gfy0/) — a read-only project directory in English, Simplified Chinese, Spanish, Arabic and Japanese. Browse and search 20 projects, then follow links to their original sources.
 
-New project submissions are currently paused. The directory remains available to browse. Paid support is not available during the pilot.
+Free to browse. This directory does not offer accounts, project submissions, payments or rankings.
