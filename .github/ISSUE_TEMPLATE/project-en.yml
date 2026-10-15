@@ -1,0 +1,57 @@
+{
+  "name": "Suggest a project publicly (en)",
+  "description": "Suggest a project for the free directory. Identity and content are public.",
+  "title": "[Project suggestion] ",
+  "body": [
+    {
+      "type": "markdown",
+      "attributes": {
+        "value": "GitHub sign-in is required. Your GitHub identity and suggestion will be public. Do not include personal, confidential or payment information.\n\nThis creates a public suggestion for consideration, not an anonymous submission or private receipt. It does not trigger automatic review or guarantee publication. No payment is requested.\n\nKeep the issue URL to view its open or closed status and any response. You can edit your suggestion on GitHub. If submission fails, check your issues before trying again to avoid duplicates."
+      }
+    },
+    {
+      "type": "input",
+      "id": "project-name",
+      "attributes": {
+        "label": "Project name"
+      },
+      "validations": {
+        "required": true
+      }
+    },
+    {
+      "type": "input",
+      "id": "official-url",
+      "attributes": {
+        "label": "Official public URL",
+        "placeholder": "https://example.org/"
+      },
+      "validations": {
+        "required": true
+      }
+    },
+    {
+      "type": "textarea",
+      "id": "reason",
+      "attributes": {
+        "label": "Why is this project worth discovering?"
+      },
+      "validations": {
+        "required": true
+      }
+    },
+    {
+      "type": "checkboxes",
+      "id": "public-disclosure",
+      "attributes": {
+        "label": "Suggest a project publicly",
+        "options": [
+          {
+            "label": "I understand that my GitHub identity and this content will be public, and I have not included personal, confidential or payment information.",
+            "required": true
+          }
+        ]
+      }
+    }
+  ]
+}

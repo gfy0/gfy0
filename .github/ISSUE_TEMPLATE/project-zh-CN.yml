@@ -1,0 +1,57 @@
+{
+  "name": "公开建议一个项目 (zh-CN)",
+  "description": "为免费目录建议项目；身份和内容将公开。",
+  "title": "[Project suggestion] ",
+  "body": [
+    {
+      "type": "markdown",
+      "attributes": {
+        "value": "需要登录 GitHub。你的 GitHub 身份和建议内容会公开展示。请勿填写个人、机密或付款信息。\n\n这只会建立一条供后续考虑的公开建议，不是匿名投稿或私有回执，不会触发自动审核，也不保证收录。不收取任何费用。\n\n请保存 Issue 网址，查看其开启或关闭状态及答复。你可以在 GitHub 编辑自己的建议。若提交失败，请先检查是否已生成记录，避免重复提交。"
+      }
+    },
+    {
+      "type": "input",
+      "id": "project-name",
+      "attributes": {
+        "label": "项目名称"
+      },
+      "validations": {
+        "required": true
+      }
+    },
+    {
+      "type": "input",
+      "id": "official-url",
+      "attributes": {
+        "label": "官方公开网址",
+        "placeholder": "https://example.org/"
+      },
+      "validations": {
+        "required": true
+      }
+    },
+    {
+      "type": "textarea",
+      "id": "reason",
+      "attributes": {
+        "label": "这个项目有什么值得了解的地方？"
+      },
+      "validations": {
+        "required": true
+      }
+    },
+    {
+      "type": "checkboxes",
+      "id": "public-disclosure",
+      "attributes": {
+        "label": "公开建议一个项目",
+        "options": [
+          {
+            "label": "我理解 GitHub 身份和本次内容会公开，且未填写个人、机密或付款信息。",
+            "required": true
+          }
+        ]
+      }
+    }
+  ]
+}

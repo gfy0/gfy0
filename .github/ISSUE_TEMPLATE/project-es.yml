@@ -1,0 +1,57 @@
+{
+  "name": "Sugerir un proyecto públicamente (es)",
+  "description": "Sugiere un proyecto para el directorio gratuito. La identidad y el contenido son públicos.",
+  "title": "[Project suggestion] ",
+  "body": [
+    {
+      "type": "markdown",
+      "attributes": {
+        "value": "Debes iniciar sesión en GitHub. Tu identidad de GitHub y tu sugerencia serán públicas. No incluyas datos personales, confidenciales ni de pago.\n\nSe crea una sugerencia pública para su consideración, no un envío anónimo ni un recibo privado. No activa una revisión automática ni garantiza la publicación. No se solicita ningún pago.\n\nGuarda la URL de la incidencia para consultar su estado abierto o cerrado y las respuestas. Puedes editarla en GitHub. Si el envío falla, comprueba primero si ya existe para evitar duplicados."
+      }
+    },
+    {
+      "type": "input",
+      "id": "project-name",
+      "attributes": {
+        "label": "Nombre del proyecto"
+      },
+      "validations": {
+        "required": true
+      }
+    },
+    {
+      "type": "input",
+      "id": "official-url",
+      "attributes": {
+        "label": "URL oficial pública",
+        "placeholder": "https://example.org/"
+      },
+      "validations": {
+        "required": true
+      }
+    },
+    {
+      "type": "textarea",
+      "id": "reason",
+      "attributes": {
+        "label": "¿Por qué merece la pena conocer este proyecto?"
+      },
+      "validations": {
+        "required": true
+      }
+    },
+    {
+      "type": "checkboxes",
+      "id": "public-disclosure",
+      "attributes": {
+        "label": "Sugerir un proyecto públicamente",
+        "options": [
+          {
+            "label": "Entiendo que mi identidad de GitHub y este contenido serán públicos y no he incluido datos personales, confidenciales ni de pago.",
+            "required": true
+          }
+        ]
+      }
+    }
+  ]
+}
