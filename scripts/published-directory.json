@@ -1,0 +1,108 @@
+{
+  "sourceRepository": "gfy0/gfy0",
+  "sourceBranch": "codex/your-no1-pages",
+  "sourceCommit": "f46005769b762bff90a8fd1524937b4cc9d28630",
+  "scope": "Exact source URL hints only; not candidate approval or ranking authority",
+  "projects": [
+    {
+      "name": "Blender",
+      "source": "https://github.com/blender/blender",
+      "path": "candidate-057d6eac-185c-4df9-957b-6ba10a9cce88"
+    },
+    {
+      "name": "rclone",
+      "source": "https://raw.githubusercontent.com/rclone/rclone/master/README.md",
+      "path": "candidate-069e80bd-7936-4ca6-87fe-97787f49c132"
+    },
+    {
+      "name": "Joplin",
+      "source": "https://joplinapp.org/help/",
+      "path": "candidate-15a313fe-684c-487b-b5e4-9b7d5101d626"
+    },
+    {
+      "name": "FreeCAD",
+      "source": "https://github.com/FreeCAD/FreeCAD",
+      "path": "candidate-1a278f8e-7bf9-4d96-8593-5d67abc267e9"
+    },
+    {
+      "name": "Krita",
+      "source": "https://krita.org/en/",
+      "path": "candidate-2c6adb09-262e-4766-a2bd-adc425433a7e"
+    },
+    {
+      "name": "RawTherapee",
+      "source": "https://github.com/RawTherapee/RawTherapee",
+      "path": "candidate-4151fa9c-2598-4f86-be08-b8ebe431ca72"
+    },
+    {
+      "name": "Ardour",
+      "source": "https://github.com/Ardour/ardour",
+      "path": "candidate-444c0b70-c48c-4e55-af5a-8305a016e236"
+    },
+    {
+      "name": "Zotero",
+      "source": "https://www.zotero.org/about/",
+      "path": "candidate-522ebd3d-a661-4757-a4f5-4c956348b7f8"
+    },
+    {
+      "name": "GIMP",
+      "source": "https://www.gimp.org/",
+      "path": "candidate-7c9e8810-2b76-43ee-9f9f-88edf42fc1c4"
+    },
+    {
+      "name": "Godot Engine",
+      "source": "https://github.com/godotengine/godot",
+      "path": "candidate-7d7f2210-e50e-4ee9-965e-148391812ed5"
+    },
+    {
+      "name": "Inkscape",
+      "source": "https://gitlab.com/inkscape/inkscape",
+      "path": "candidate-8bc6fc1c-262d-4e4c-ba8d-a386df43fb26"
+    },
+    {
+      "name": "LibreOffice",
+      "source": "https://www.libreoffice.org/",
+      "path": "candidate-913fc4ba-78bf-419c-979d-b73f2816593a"
+    },
+    {
+      "name": "MuseScore",
+      "source": "https://github.com/musescore/MuseScore",
+      "path": "candidate-99efd358-2cd1-4918-80a8-5e117943a58c"
+    },
+    {
+      "name": "Audacity",
+      "source": "https://www.audacityteam.org/",
+      "path": "candidate-9ed303f6-b4b4-43a8-983c-bd1a45a11233"
+    },
+    {
+      "name": "OBS Studio",
+      "source": "https://github.com/obsproject/obs-studio",
+      "path": "candidate-acf48b80-614b-436b-a10a-26e3135f1cec"
+    },
+    {
+      "name": "HandBrake",
+      "source": "https://github.com/HandBrake/HandBrake",
+      "path": "candidate-ad0e9025-e248-4716-9ac7-08ffa7a5f6c8"
+    },
+    {
+      "name": "Git",
+      "source": "https://raw.githubusercontent.com/git/git/master/README.md",
+      "path": "candidate-af1c4343-57f4-4f99-933a-8fcfa4ea92be"
+    },
+    {
+      "name": "KiCad",
+      "source": "https://www.kicad.org/about/kicad/",
+      "path": "candidate-c9035e19-fd8d-4e03-811f-e61188f8d977"
+    },
+    {
+      "name": "Shotcut",
+      "source": "https://shotcut.org/",
+      "path": "candidate-d549b449-f36d-4ad2-b664-05b0cc394f8e"
+    },
+    {
+      "name": "curl",
+      "source": "https://raw.githubusercontent.com/curl/curl/master/README.md",
+      "path": "candidate-fefdab25-2e80-404e-a8f4-a8a3efa034f1"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+name: Public suggestion receipt
+on:
+  issues:
+    types: [opened, edited, reopened]
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: public-suggestion-${{ github.event.issue.number }}
+  cancel-in-progress: false
+jobs:
+  receipt:
+    if: github.repository == 'gfy0/gfy0' && github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Verify receipt behavior
+        run: node --test scripts/suggestion-receipt.test.mjs
+      - name: Save receipt on the original suggestion
+        run: node scripts/suggestion-receipt.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
