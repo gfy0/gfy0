@@ -14,8 +14,9 @@ const headings = {
 };
 function issue(locale='en', url='https://github.com/blender/blender', reason='A project suggestion for testing.') {
   const h=headings[locale];
+  const check=templates[locale].body.find(x=>x.id==='not-listed').attributes;
   const consent=templates[locale].body.find(x=>x.id==='public-disclosure').attributes.options[0].label;
-  return {number:3,title:'[Project suggestion] Operational test, not demand',state:'open',updated_at:'2026-10-16T00:00:00Z',body:`### ${h[0]}\n\nBlender\n\n### ${h[1]}\n\n${url}\n\n### ${h[2]}\n\n${reason}\n\n### ${h[3]}\n\n- [x] ${consent}`};
+  return {number:3,title:'[Project suggestion] Operational test, not demand',state:'open',updated_at:'2026-10-16T00:00:00Z',body:`### ${h[0]}\n\nBlender\n\n### ${h[1]}\n\n${url}\n\n### ${h[2]}\n\n${reason}\n\n### ${h[3]}\n\n- [x] ${consent}\n\n### ${check.label}\n\n- [x] ${check.options[0].label}`};
 }
 
 test('all five real form formats give an exact existing source match, not acceptance',()=>{
@@ -92,3 +93,5 @@ test('closed records and changed input cannot publish a stale receipt; read fail
   await processIssue(3,async(method)=>{assert.equal(method,'GET');return {...initial,state:'closed'};},catalog,templates);
   await assert.rejects(processIssue(3,async()=>{throw Error('rate limited');},catalog,templates));
 });
+
+test("unchecked directory acknowledgement is rejected",()=>{const input=issue();input.body=input.body.replace(/- \[x\] I searched/,"- [ ] I searched");assert.equal(evaluate(input,catalog,templates).outcome,"needs-information");});

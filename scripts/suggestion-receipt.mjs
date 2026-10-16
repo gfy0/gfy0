@@ -44,7 +44,7 @@ export function evaluate(issue, catalog, templates) {
   for(const field of form) {
     const value=values.get(field.attributes.label);
     const absent=typeof value !== 'string' || !value || value === '_No response_';
-    const invalid=field.id==='official-url' ? !sourceUrl(value) : field.id==='public-disclosure' ? absent || !value.split(/\r?\n/).some(line=>line.replace(/^- \[X\]/,'- [x]')==='- [x] '+field.attributes.options[0].label) : absent || value.length > (field.id==='project-name'?200:4000);
+    const invalid=field.id==='official-url' ? !sourceUrl(value) : ['public-disclosure','not-listed'].includes(field.id) ? absent || !value.split(/\r?\n/).some(line=>line.replace(/^- \[X\]/,'- [x]')==='- [x] '+field.attributes.options[0].label) : absent || value.length > (field.id==='project-name'?200:4000);
     if(invalid) missing.push(field.attributes.label);
   }
   if(locales.length !== 1 && !missing.length) missing.push(form[0].attributes.label);
