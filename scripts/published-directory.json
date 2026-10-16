@@ -103,6 +103,11 @@
       "name": "curl",
       "source": "https://raw.githubusercontent.com/curl/curl/master/README.md",
       "path": "candidate-fefdab25-2e80-404e-a8f4-a8a3efa034f1"
+    },
+    {
+      "name": "Deno",
+      "source": "https://deno.com/",
+      "path": "candidate-0d6e9e02-448a-49be-986b-85e46ab2d6f3"
     }
   ]
 }
