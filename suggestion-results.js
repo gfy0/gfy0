@@ -87,7 +87,13 @@
       output.append(element('p'),link(t[17],url.href),element('h4',t[14]),element('pre',typeof issue.body === 'string' && issue.body ? issue.body.slice(0,12000) : t[24], 'suggestion-text'),element('h4',t[15]));
       if(result.repliesUnavailable) output.append(element('p',t[22]));
       else if(!result.replies.length) output.append(element('p',t[23]));
-      else for(const reply of result.replies) output.append(element('pre',reply.body.slice(0,6000),'suggestion-text'));
+      else for(const reply of result.replies) {
+        output.append(element('pre',reply.body.slice(0,6000),'suggestion-text'));
+        if(reply.user?.login === 'gfy0' && reply.body.startsWith('Your No.1 · Review result · ')) {
+          const match = reply.body.match(/^https:\/\/gfy0\.github\.io\/gfy0\/(?:en|zh-CN|es|ar|ja)\/candidates\/candidate-[a-f0-9-]{36}\/$/m);
+          if(match) output.append(link({"en":"Open reviewed project","zh-CN":"打开已审核项目","es":"Abrir proyecto revisado","ar":"فتح المشروع المراجع","ja":"審査済みプロジェクトを開く"}[document.documentElement.lang] || 'Open reviewed project', match[0]));
+        }
+      }
       status.textContent = ''; output.dataset.loaded = 'true';
     } catch(error) {
       delete output.dataset.loaded;
