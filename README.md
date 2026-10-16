@@ -1,5 +1,9 @@
 # Your No.1
 
-[Explore Your No.1](https://gfy0.github.io/gfy0/) — a read-only project directory in English, Simplified Chinese, Spanish, Arabic and Japanese. Browse and search 20 projects, then follow links to their original sources.
+[Explore Your No.1](https://gfy0.github.io/gfy0/) — a free project directory in English, Simplified Chinese, Spanish, Arabic and Japanese. Browse and search published projects, then visit their official sources.
 
-Free to browse. This directory does not offer accounts, project submissions, payments or rankings.
+[Suggest a project](https://gfy0.github.io/gfy0/en/submit/) through GitHub. A GitHub account and sign-in are required; your GitHub identity and suggestion content are public. Do not include personal, confidential or payment information.
+
+Suggestions are reviewed in operator-started batches. There is no promised response time or guaranteed listing. The result page links to a project after review and publication.
+
+The pilot is free. Payments and paid rankings are not enabled.
