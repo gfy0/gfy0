@@ -18,4 +18,6 @@ jobs:
           ref: main
           persist-credentials: false
       - name: Measure CPU feasibility without product writes
-        run: python3 scripts/cloud-model-probe.py
+        run: |
+          python3 -B scripts/test_cloud_model_manifest.py
+          python3 -B scripts/cloud-model-probe.py
