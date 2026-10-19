@@ -4,6 +4,6 @@
 
 [Suggest a project](https://gfy0.github.io/gfy0/en/submit/) through GitHub. A GitHub account and sign-in are required; your GitHub identity and suggestion content are public. Do not include personal, confidential or payment information.
 
-Suggestions are reviewed in operator-started batches. There is no promised response time or guaranteed listing. The result page links to a project after review and publication.
+Suggestions are reviewed in limited batches. No response time or listing is promised. The result page links to a project after review and publication.
 
 The pilot is free. Payments and paid rankings are not enabled.
