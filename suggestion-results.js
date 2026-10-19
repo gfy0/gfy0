@@ -18,8 +18,7 @@
     } finally { clearTimeout(timeout); }
   }
   function isOfficialReview(reply) {
-    return reply?.user?.login === 'gfy0' && typeof reply.body === 'string' &&
-      /^Your No\.1 · Review result · [a-f0-9]{16}$/.test(reply.body.split(/\r?\n/,1)[0]);
+    return typeof reply?.body === 'string' && ((reply.user?.login === 'gfy0' && /^Your No\.1 · Review result · [a-f0-9]{16}$/.test(reply.body.split(/\r?\n/,1)[0])) || (reply.user?.login === 'github-actions[bot]' && reply.user?.type === 'Bot' && /^Your No\.1 · Cloud review · [a-f0-9]{16}$/.test(reply.body.split(/\r?\n/,1)[0])));
   }
   async function loadIssue(number, fetcher = fetch) {
     if (parseIssueNumber(number) !== number) throw Error('invalid-number');
