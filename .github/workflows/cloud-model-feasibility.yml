@@ -1,0 +1,21 @@
+name: One-shot free cloud model feasibility
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: your-no1-model-feasibility
+  cancel-in-progress: false
+jobs:
+  probe:
+    if: github.repository == 'gfy0/gfy0' && github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Read fixed experiment
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Measure CPU feasibility without product writes
+        run: python3 scripts/cloud-model-probe.py
