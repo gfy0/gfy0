@@ -118,6 +118,11 @@
       "name": "ESLint",
       "source": "https://github.com/eslint/eslint",
       "path": "candidate-bd71d4f1-f43c-43e5-8952-21266034fddf"
+    },
+    {
+      "name": "Prettier",
+      "source": "https://github.com/prettier/prettier",
+      "path": "candidate-2ea7bb58-9a6e-416a-8f59-1b9a82f34d79"
     }
   ]
 }
