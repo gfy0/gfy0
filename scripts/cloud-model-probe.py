@@ -132,10 +132,12 @@ try:
                                        'num_thread': 4}}, timeout=240)
         # Never persist or print response.message.thinking or the raw response.
         answer = json.loads(response['message']['content'])
-        assert answer == expected_answer
         report['cases'].append({'case': name, 'classification': answer,
+                               'finalContent': response['message']['content'],
+                               'doneReason': response.get('done_reason'),
                                'elapsedSeconds': round(time.monotonic() - sample_started, 2),
                                'generationTokens': response.get('eval_count')})
+        assert answer == expected_answer
         del response
     report['status'] = 'PASS_TWO_SYNTHETIC_CASES_ONLY'
 except Exception as error:
