@@ -17,6 +17,10 @@
       return await response.json();
     } finally { clearTimeout(timeout); }
   }
+  function isOfficialReview(reply) {
+    return reply?.user?.login === 'gfy0' && typeof reply.body === 'string' &&
+      /^Your No\.1 · Review result · [a-f0-9]{16}$/.test(reply.body.split(/\r?\n/,1)[0]);
+  }
   async function loadIssue(number, fetcher = fetch) {
     if (parseIssueNumber(number) !== number) throw Error('invalid-number');
     const issue = await request(api + number, fetcher);
@@ -24,9 +28,20 @@
     const result = {issue, replies:[], repliesUnavailable:false};
     if (Number.isSafeInteger(issue.comments) && issue.comments > 0) {
       try {
-        const replies = await request(api + number + '/comments?per_page=5&page=' + Math.ceil(issue.comments / 5), fetcher);
+        const replies = await request(api + number + '/comments?per_page=100&page=1', fetcher);
         if (!Array.isArray(replies)) throw Error('invalid-response');
-        result.replies = replies.slice(0,5).filter(reply => typeof reply.body === 'string');
+        const first = replies.slice(0,100).filter(reply => typeof reply?.body === 'string');
+        result.replies = first.slice(-5);
+        let reviewed = first.filter(isOfficialReview).at(-1);
+        if (issue.comments > 100) {
+          try {
+            const tail = await request(api + number + '/comments?per_page=5&page=' + Math.ceil(issue.comments / 5), fetcher);
+            if (!Array.isArray(tail)) throw Error('invalid-response');
+            result.replies = tail.slice(0,5).filter(reply => typeof reply?.body === 'string');
+            reviewed = result.replies.filter(isOfficialReview).at(-1) || reviewed;
+          } catch { result.repliesUnavailable = true; }
+        }
+        if (reviewed && !result.replies.some(reply => reply.id === reviewed.id)) result.replies.unshift(reviewed);
       } catch { result.repliesUnavailable = true; }
     }
     return result;
@@ -34,11 +49,11 @@
   if (typeof module !== 'undefined') module.exports = {parseIssueNumber, loadIssue};
   if (typeof document === 'undefined') return;
   const translations = {
-    en:['View your suggestion','Paste the issue number or its GitHub link. Keep this link to return on another device.','Issue number or link','e.g. 2 or https://github.com/gfy0/gfy0/issues/2','View result','Loading…','Open record','Closed record','Completed','Not planned','Reopened','No closure reason provided','This is the public GitHub record status. It does not mean the project has been added to the directory.','Updated','Suggestion','Latest page of replies','Read the complete record or reply on GitHub','Share this result','Enter a positive issue number or a link from github.com/gfy0/gfy0/issues.','Record not found. Check the number or open GitHub.','GitHub has limited this lookup. No automatic retry will occur; use the original record below.','Unable to read GitHub right now. Your saved suggestion is unchanged. Open the original record or try later.','The record loaded, but replies could not be read. See GitHub for replies.','No replies yet.','No description provided.'],
-    'zh-CN':['查看投稿结果','输入投稿编号或 GitHub 记录链接。保存结果页链接，换设备也能继续查看。','投稿编号或记录链接','例如 2，或 https://github.com/gfy0/gfy0/issues/2','查看结果','正在读取…','记录开启','记录已关闭','已完成','未计划处理','重新开启','未提供关闭原因','这是 GitHub 公开记录的状态，不代表项目已被目录收录。','更新时间','投稿内容','最新一页答复','在 GitHub 查看完整记录或答复','分享此结果','请输入正整数编号，或 github.com/gfy0/gfy0/issues 下的记录链接。','没有找到记录，请核对编号或打开 GitHub。','GitHub 暂时限制了查询。页面不会自动重试，可通过下方链接查看原记录。','暂时无法读取 GitHub，已保存的投稿不受影响。请打开原记录或稍后再试。','记录已读到，但答复读取失败，请到 GitHub 查看。','暂无答复。','没有填写说明。'],
-    es:['Consultar tu sugerencia','Introduce el número o enlace de la incidencia. Guarda el enlace del resultado para volver desde otro dispositivo.','Número o enlace','p. ej. 2 o https://github.com/gfy0/gfy0/issues/2','Ver resultado','Cargando…','Registro abierto','Registro cerrado','Completado','No previsto','Reabierto','Sin motivo de cierre','Este es el estado del registro público en GitHub. No significa que el proyecto se haya incluido en el directorio.','Actualizado','Sugerencia','Última página de respuestas','Ver el registro completo o responder en GitHub','Compartir este resultado','Introduce un número positivo o un enlace de github.com/gfy0/gfy0/issues.','No se encontró el registro. Revisa el número o abre GitHub.','GitHub ha limitado la consulta. No se reintentará automáticamente; usa el enlace al registro.','No se puede consultar GitHub ahora. Tu sugerencia guardada no ha cambiado. Abre el registro o vuelve más tarde.','Se cargó el registro, pero no las respuestas. Consúltalas en GitHub.','Aún no hay respuestas.','Sin descripción.'],
-    ar:['عرض نتيجة اقتراحك','أدخل رقم السجل أو رابطه على GitHub. احفظ رابط النتيجة للعودة من جهاز آخر.','رقم السجل أو رابطه','مثال: 2 أو https://github.com/gfy0/gfy0/issues/2','عرض النتيجة','جارٍ التحميل…','السجل مفتوح','السجل مغلق','مكتمل','غير مخطط له','أعيد فتحه','لم يُذكر سبب الإغلاق','هذه حالة السجل العام على GitHub، ولا تعني إدراج المشروع في الدليل.','آخر تحديث','محتوى الاقتراح','أحدث صفحة من الردود','عرض السجل الكامل أو الرد على GitHub','مشاركة النتيجة','أدخل رقمًا موجبًا أو رابطًا من github.com/gfy0/gfy0/issues.','لم يُعثر على السجل. تحقق من الرقم أو افتح GitHub.','قيّد GitHub الاستعلام مؤقتًا. لن تُعاد المحاولة تلقائيًا؛ استخدم رابط السجل.','تعذرت قراءة GitHub الآن. لم يتغير اقتراحك المحفوظ. افتح السجل أو حاول لاحقًا.','تم تحميل السجل وتعذرت قراءة الردود. راجع GitHub.','لا توجد ردود بعد.','لم يُكتب وصف.'],
-    ja:['投稿結果を確認','番号または GitHub の記録リンクを入力してください。結果のリンクを保存すると別の端末でも確認できます。','投稿番号またはリンク','例: 2 または https://github.com/gfy0/gfy0/issues/2','結果を見る','読み込み中…','記録はオープン','記録はクローズ','完了','対応予定なし','再オープン','クローズ理由なし','これは GitHub の公開記録の状態です。ディレクトリへの掲載を意味しません。','更新日時','投稿内容','返信の最新ページ','GitHub で全記録の確認・返信','結果を共有','正の整数、または github.com/gfy0/gfy0/issues のリンクを入力してください。','記録が見つかりません。番号を確認するか GitHub を開いてください。','GitHub の照会制限に達しました。自動再試行は行いません。元の記録を開いてください。','現在 GitHub を読み込めません。保存済みの投稿は変わりません。元の記録を開くか、後で再試行してください。','記録は読み込めましたが返信を取得できませんでした。GitHub をご確認ください。','返信はまだありません。','説明はありません。']
+    en:['View your suggestion','Paste the issue number or its GitHub link. Keep this link to return on another device.','Issue number or link','e.g. 2 or https://github.com/gfy0/gfy0/issues/2','View result','Loading…','Open record','Closed record','Completed','Not planned','Reopened','No closure reason provided','This is the public GitHub record status. It does not mean the project has been added to the directory.','Updated','Suggestion','Review and recent replies','Read the complete record or reply on GitHub','Share this result','Enter a positive issue number or a link from github.com/gfy0/gfy0/issues.','Record not found. Check the number or open GitHub.','GitHub has limited this lookup. No automatic retry will occur; use the original record below.','Unable to read GitHub right now. Your saved suggestion is unchanged. Open the original record or try later.','The record loaded, but replies could not be read. See GitHub for replies.','No replies yet.','No description provided.'],
+    'zh-CN':['查看投稿结果','输入投稿编号或 GitHub 记录链接。保存结果页链接，换设备也能继续查看。','投稿编号或记录链接','例如 2，或 https://github.com/gfy0/gfy0/issues/2','查看结果','正在读取…','记录开启','记录已关闭','已完成','未计划处理','重新开启','未提供关闭原因','这是 GitHub 公开记录的状态，不代表项目已被目录收录。','更新时间','投稿内容','审核与最近答复','在 GitHub 查看完整记录或答复','分享此结果','请输入正整数编号，或 github.com/gfy0/gfy0/issues 下的记录链接。','没有找到记录，请核对编号或打开 GitHub。','GitHub 暂时限制了查询。页面不会自动重试，可通过下方链接查看原记录。','暂时无法读取 GitHub，已保存的投稿不受影响。请打开原记录或稍后再试。','记录已读到，但答复读取失败，请到 GitHub 查看。','暂无答复。','没有填写说明。'],
+    es:['Consultar tu sugerencia','Introduce el número o enlace de la incidencia. Guarda el enlace del resultado para volver desde otro dispositivo.','Número o enlace','p. ej. 2 o https://github.com/gfy0/gfy0/issues/2','Ver resultado','Cargando…','Registro abierto','Registro cerrado','Completado','No previsto','Reabierto','Sin motivo de cierre','Este es el estado del registro público en GitHub. No significa que el proyecto se haya incluido en el directorio.','Actualizado','Sugerencia','Revisión y respuestas recientes','Ver el registro completo o responder en GitHub','Compartir este resultado','Introduce un número positivo o un enlace de github.com/gfy0/gfy0/issues.','No se encontró el registro. Revisa el número o abre GitHub.','GitHub ha limitado la consulta. No se reintentará automáticamente; usa el enlace al registro.','No se puede consultar GitHub ahora. Tu sugerencia guardada no ha cambiado. Abre el registro o vuelve más tarde.','Se cargó el registro, pero no las respuestas. Consúltalas en GitHub.','Aún no hay respuestas.','Sin descripción.'],
+    ar:['عرض نتيجة اقتراحك','أدخل رقم السجل أو رابطه على GitHub. احفظ رابط النتيجة للعودة من جهاز آخر.','رقم السجل أو رابطه','مثال: 2 أو https://github.com/gfy0/gfy0/issues/2','عرض النتيجة','جارٍ التحميل…','السجل مفتوح','السجل مغلق','مكتمل','غير مخطط له','أعيد فتحه','لم يُذكر سبب الإغلاق','هذه حالة السجل العام على GitHub، ولا تعني إدراج المشروع في الدليل.','آخر تحديث','محتوى الاقتراح','المراجعة والردود الأخيرة','عرض السجل الكامل أو الرد على GitHub','مشاركة النتيجة','أدخل رقمًا موجبًا أو رابطًا من github.com/gfy0/gfy0/issues.','لم يُعثر على السجل. تحقق من الرقم أو افتح GitHub.','قيّد GitHub الاستعلام مؤقتًا. لن تُعاد المحاولة تلقائيًا؛ استخدم رابط السجل.','تعذرت قراءة GitHub الآن. لم يتغير اقتراحك المحفوظ. افتح السجل أو حاول لاحقًا.','تم تحميل السجل وتعذرت قراءة الردود. راجع GitHub.','لا توجد ردود بعد.','لم يُكتب وصف.'],
+    ja:['投稿結果を確認','番号または GitHub の記録リンクを入力してください。結果のリンクを保存すると別の端末でも確認できます。','投稿番号またはリンク','例: 2 または https://github.com/gfy0/gfy0/issues/2','結果を見る','読み込み中…','記録はオープン','記録はクローズ','完了','対応予定なし','再オープン','クローズ理由なし','これは GitHub の公開記録の状態です。ディレクトリへの掲載を意味しません。','更新日時','投稿内容','審査と最近の返信','GitHub で全記録の確認・返信','結果を共有','正の整数、または github.com/gfy0/gfy0/issues のリンクを入力してください。','記録が見つかりません。番号を確認するか GitHub を開いてください。','GitHub の照会制限に達しました。自動再試行は行いません。元の記録を開いてください。','現在 GitHub を読み込めません。保存済みの投稿は変わりません。元の記録を開くか、後で再試行してください。','記録は読み込めましたが返信を取得できませんでした。GitHub をご確認ください。','返信はまだありません。','説明はありません。']
   };
   const t = translations[document.documentElement.lang] || translations.en;
   const host = document.getElementById('suggestion-results');
@@ -86,10 +101,10 @@
       if (!Number.isNaN(updated.valueOf())) output.append(element('p',t[13] + ': ' + updated.toLocaleString(document.documentElement.lang)));
       output.append(element('p'),link(t[17],url.href),element('h4',t[14]),element('pre',typeof issue.body === 'string' && issue.body ? issue.body.slice(0,12000) : t[24], 'suggestion-text'),element('h4',t[15]));
       if(result.repliesUnavailable) output.append(element('p',t[22]));
-      else if(!result.replies.length) output.append(element('p',t[23]));
+      if(!result.replies.length && !result.repliesUnavailable) output.append(element('p',t[23]));
       else for(const reply of result.replies) {
         output.append(element('pre',reply.body.slice(0,6000),'suggestion-text'));
-        if(reply.user?.login === 'gfy0' && reply.body.startsWith('Your No.1 · Review result · ')) {
+        if(isOfficialReview(reply)) {
           const match = reply.body.match(/^https:\/\/gfy0\.github\.io\/gfy0\/(?:en|zh-CN|es|ar|ja)\/candidates\/candidate-[a-f0-9-]{36}\/$/m);
           if(match) output.append(link({"en":"Open reviewed project","zh-CN":"打开已审核项目","es":"Abrir proyecto revisado","ar":"فتح المشروع المراجع","ja":"審査済みプロジェクトを開く"}[document.documentElement.lang] || 'Open reviewed project', match[0]));
         }
