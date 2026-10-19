@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "scope": "Exact pre-reviewed sources only for free static directory; no arbitrary-source AI review, database candidates, rankings or payments.",
+  "reviewedAt": "2026-10-19T06:41:28.767Z",
+  "sources": [
+    {
+      "fullName": "eslint/eslint",
+      "id": 11061773,
+      "ownerId": 6019716,
+      "license": "MIT",
+      "branch": "main",
+      "commit": "8ffeb8c023bea91a5cfa01b1413a52a83838a59a",
+      "readmePath": "README.md",
+      "readmeSha": "585a3adc2d97aabb2e6dc6c66a060e198881b20d",
+      "licensePath": "LICENSE",
+      "licenseSha": "b607bb36e96c33fd8ef50897db0336c585b6137a",
+      "name": "ESLint",
+      "source": "https://github.com/eslint/eslint",
+      "summaries": {
+        "en": "A tool for finding problematic patterns in JavaScript code.",
+        "zh-CN": "用于检查 JavaScript 代码中问题模式的工具。",
+        "es": "Herramienta para detectar patrones problemáticos en código JavaScript.",
+        "ar": "أداة لاكتشاف الأنماط التي قد تسبب مشكلات في شيفرة JavaScript.",
+        "ja": "JavaScript コード内の問題につながるパターンを検出するツール。"
+      },
+      "review": {
+        "decision": "accepted-static-project-profile-only",
+        "category": "software-development-tool",
+        "political": false,
+        "highRisk": false,
+        "privatePerson": false,
+        "uncertain": false,
+        "reason": "The linked project README describes a developer tool; only the fixed neutral project summary and official repository link are approved. No submitted prose or external sponsor links are published.",
+        "evidence": "https://github.com/eslint/eslint/blob/8ffeb8c023bea91a5cfa01b1413a52a83838a59a/README.md"
+      }
+    },
+    {
+      "fullName": "prettier/prettier",
+      "id": 75104123,
+      "ownerId": 25822731,
+      "license": "MIT",
+      "branch": "main",
+      "commit": "dc1a89bad8762bb551916e1fceeae947f94d8939",
+      "readmePath": "README.md",
+      "readmeSha": "2297b58e424367eaaaa6a22c8f9f3ed45e769cca",
+      "licensePath": "LICENSE",
+      "licenseSha": "5767e34d30ab78796220f9492726dd2f677d4166",
+      "name": "Prettier",
+      "source": "https://github.com/prettier/prettier",
+      "summaries": {
+        "en": "A code formatter that applies a consistent formatting style.",
+        "zh-CN": "为代码应用一致排版风格的格式化工具。",
+        "es": "Formateador de código que aplica un estilo uniforme.",
+        "ar": "أداة لتنسيق الشيفرة بأسلوب موحّد.",
+        "ja": "一貫した書式をコードに適用するフォーマッター。"
+      },
+      "review": {
+        "decision": "accepted-static-project-profile-only",
+        "category": "software-development-tool",
+        "political": false,
+        "highRisk": false,
+        "privatePerson": false,
+        "uncertain": false,
+        "reason": "The linked project README describes a developer tool; only the fixed neutral project summary and official repository link are approved. No submitted prose or external sponsor links are published.",
+        "evidence": "https://github.com/prettier/prettier/blob/dc1a89bad8762bb551916e1fceeae947f94d8939/README.md"
+      }
+    },
+    {
+      "fullName": "microsoft/TypeScript",
+      "id": 20929025,
+      "ownerId": 6154722,
+      "license": "Apache-2.0",
+      "branch": "main",
+      "commit": "5237fd46890956e4bb8177a1a05dcd69e4166560",
+      "readmePath": "README.md",
+      "readmeSha": "79adc1b165e396ac026a8e88da02e693b4a5afae",
+      "licensePath": "LICENSE.txt",
+      "licenseSha": "8746124b277914d0f0fd9cf4aef2ed3b587143d9",
+      "name": "TypeScript",
+      "source": "https://github.com/microsoft/TypeScript",
+      "summaries": {
+        "en": "A programming language that adds types to JavaScript and compiles to JavaScript.",
+        "zh-CN": "为 JavaScript 添加类型并编译为 JavaScript 的编程语言。",
+        "es": "Lenguaje que añade tipos a JavaScript y se compila a JavaScript.",
+        "ar": "لغة برمجة تضيف الأنواع إلى JavaScript وتُترجم إلى JavaScript.",
+        "ja": "JavaScript に型を追加し、JavaScript にコンパイルするプログラミング言語。"
+      },
+      "review": {
+        "decision": "accepted-static-project-profile-only",
+        "category": "software-development-tool",
+        "political": false,
+        "highRisk": false,
+        "privatePerson": false,
+        "uncertain": false,
+        "reason": "The linked project README describes a developer tool; only the fixed neutral project summary and official repository link are approved. No submitted prose or external sponsor links are published.",
+        "evidence": "https://github.com/microsoft/TypeScript/blob/5237fd46890956e4bb8177a1a05dcd69e4166560/README.md"
+      }
+    }
+  ]
+}
