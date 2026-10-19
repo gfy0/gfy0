@@ -1,7 +1,7 @@
 {
   "sourceRepository": "gfy0/gfy0",
   "sourceBranch": "codex/your-no1-pages",
-  "sourceCommit": "76ffec612d7b47c11ba6ef99edbc10294f69ae1f",
+  "sourceCommit": "3a5c98bacc3d555e19035f55f2a7ba1e8b81497c",
   "scope": "Exact source URL hints only; not candidate approval or ranking authority",
   "projects": [
     {
@@ -108,6 +108,11 @@
       "name": "Deno",
       "source": "https://deno.com/",
       "path": "candidate-0d6e9e02-448a-49be-986b-85e46ab2d6f3"
+    },
+    {
+      "name": "jq",
+      "source": "https://jqlang.org/",
+      "path": "candidate-904663f7-b642-4218-a68a-ce30b8bb9641"
     }
   ]
 }
