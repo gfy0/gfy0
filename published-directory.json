@@ -113,6 +113,11 @@
       "name": "jq",
       "source": "https://jqlang.org/",
       "path": "candidate-904663f7-b642-4218-a68a-ce30b8bb9641"
+    },
+    {
+      "name": "ESLint",
+      "source": "https://github.com/eslint/eslint",
+      "path": "candidate-bd71d4f1-f43c-43e5-8952-21266034fddf"
     }
   ]
 }

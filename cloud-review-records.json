@@ -1,0 +1,18 @@
+[
+  {
+    "issue": 6,
+    "version": "01ce6620402e2997a50445d5464a3ab2a31d393e49cd41eba02ade00590f0ac4",
+    "source": "https://github.com/eslint/eslint",
+    "repoId": 11061773,
+    "ownerId": 6019716,
+    "commit": "8ffeb8c023bea91a5cfa01b1413a52a83838a59a",
+    "readmeSha": "585a3adc2d97aabb2e6dc6c66a060e198881b20d",
+    "licenseSha": "b607bb36e96c33fd8ef50897db0336c585b6137a",
+    "policy": "9578a1ae59c353cd",
+    "slug": "candidate-bd71d4f1-f43c-43e5-8952-21266034fddf",
+    "decision": "accepted-for-static-directory",
+    "actor": "github-actions[bot]",
+    "run": "https://github.com/gfy0/gfy0/actions/runs/39214741486",
+    "reviewedAt": "2026-10-19T07:14:55.575Z"
+  }
+]
