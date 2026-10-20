@@ -4,6 +4,7 @@ import {
   changedPaths,
   commitAllowed,
   decide,
+  failureDetails,
   hasCompletedReview,
   liveMatches,
   mayGenerateProposal,
@@ -12,6 +13,36 @@ import {
   selectNumbers,
   sourceMatches,
 } from "./cloud-suggestion-review.mjs";
+
+test("cloud failure diagnostics expose only fixed stage, class and code", () => {
+  const error = new TypeError("private message with credentials");
+  error.cause = { code: "UND_ERR_SOCKET", message: "private response" };
+  assert.deepEqual(failureDetails(error, "confirm-submission-version"), {
+    event: "cloud-review-failure",
+    stage: "confirm-submission-version",
+    name: "TypeError",
+    code: "UND_ERR_SOCKET",
+  });
+  assert.deepEqual(
+    failureDetails(
+      { name: "private name", code: "private code", stack: "private stack" },
+      "private source",
+    ),
+    {
+      event: "cloud-review-failure",
+      stage: "other",
+      name: "other",
+      code: "other",
+    },
+  );
+  for (const stage of ["initial-source-fetch", "report-source-unavailable"])
+    assert.deepEqual(failureDetails(error, stage), {
+      event: "cloud-review-failure",
+      stage,
+      name: "TypeError",
+      code: "UND_ERR_SOCKET",
+    });
+});
 
 test("only bounded scheduled or manual review can invoke the model", () => {
   for (const event of ["issues", "", "push"]) assert.equal(mayGenerateProposal(event, 0), false);

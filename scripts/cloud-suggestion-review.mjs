@@ -28,6 +28,46 @@ import {
 const base = "https://gfy0.github.io/gfy0";
 const branch = "codex/your-no1-pages";
 const templateSlug = "candidate-057d6eac-185c-4df9-957b-6ba10a9cce88";
+let executionStage = "initialization";
+export function failureDetails(error, stage) {
+  const stages = [
+    "initialization",
+    "initial-source-fetch",
+    "model-review",
+    "report-model-failure",
+    "source-decision",
+    "report-review-held",
+    "admission-decision",
+    "confirm-submission-version",
+    "recheck-source",
+    "report-source-unavailable",
+    "render-project-pages",
+    "report-approved",
+    "save-pending",
+    "persist-site",
+    "finish",
+  ];
+  const names = ["Error", "TypeError", "SyntaxError", "RangeError", "AbortError"];
+  const codes = [
+    "UND_ERR_SOCKET",
+    "ECONNRESET",
+    "EPIPE",
+    "UND_ERR_CONNECT_TIMEOUT",
+    "UND_ERR_HEADERS_TIMEOUT",
+    "ETIMEDOUT",
+    "ENOENT",
+    "EACCES",
+    "ERR_INVALID_URL",
+    "ERR_INVALID_ARG_TYPE",
+  ];
+  const code = error?.cause?.code ?? error?.code;
+  return {
+    event: "cloud-review-failure",
+    stage: stages.includes(stage) ? stage : "other",
+    name: names.includes(error?.name) ? error.name : "other",
+    code: codes.includes(code) ? code : "other",
+  };
+}
 const normalize = (s) =>
   String(s)
     .toLowerCase()
@@ -430,6 +470,7 @@ async function main() {
     return true;
   };
   if (process.argv[2] === "finish") {
+    executionStage = "finish";
     if (!fs.existsSync(stateFile)) return;
     const items = JSON.parse(fs.readFileSync(stateFile, "utf8"));
     for (const item of items) {
@@ -493,6 +534,7 @@ async function main() {
   const pending = [];
   let handled = 0;
   for (const number of numbers) {
+    executionStage = "initialization";
     if (handled >= 20) break;
     const issue = await own("GET", `issues/${number}`);
     if (
@@ -541,12 +583,14 @@ async function main() {
       source?.review?.policy === categoryPolicy.version
     ) {
       try {
+        executionStage = "initial-source-fetch";
         facts = await fetchSourceFacts(api, input.sourceUrl);
         snapshot = makeSnapshot(input.sourceUrl, facts);
       } catch (error) {
         const unavailable = /github-http-(429|5\d\d)|fetch|timeout|abort/i.test(
           String(error.message),
         );
+        executionStage = unavailable ? "report-source-unavailable" : "report-review-held";
         await report(input, unavailable ? "source-unavailable" : "review-held");
         continue;
       }
@@ -562,13 +606,18 @@ async function main() {
         modelCalls++;
         let model;
         try {
+          executionStage = "model-review";
           model = proposeSource(snapshot);
-        } catch {
+        } catch (error) {
+          console.error(JSON.stringify(failureDetails(error, "model-review")));
+          executionStage = "report-model-failure";
           await report(input, "review-failed");
           continue;
         }
+        executionStage = "source-decision";
         const proposal = evaluateSource(snapshot, model.proposal, input.name);
         if (proposal.status !== "supported") {
+          executionStage = "report-review-held";
           await report(input, "review-held");
           continue;
         }
@@ -589,7 +638,9 @@ async function main() {
         facts = null;
       }
     }
+    executionStage = "admission-decision";
     const decision = decide(input, source ? [source] : pins.sources, catalog, facts);
+    executionStage = "confirm-submission-version";
     if (!(await current(input))) continue;
     if (decision.status === "existing") {
       const recovered = audit.find(
@@ -642,8 +693,10 @@ async function main() {
     if (snapshot) {
       let fresh;
       try {
+        executionStage = "recheck-source";
         fresh = await fetchSourceFacts(api, input.sourceUrl);
       } catch {
+        executionStage = "report-source-unavailable";
         await report(input, "source-unavailable");
         continue;
       }
@@ -652,6 +705,7 @@ async function main() {
         continue;
       }
     }
+    executionStage = "render-project-pages";
     publishProjection(site, decision);
     catalog.projects.push({ name: source.name, source: source.source, path: decision.slug });
     audit.push({
@@ -674,10 +728,13 @@ async function main() {
         : {}),
     });
     pending.push({ input, source, slug: decision.slug });
+    executionStage = "report-approved";
     await report(input, "approved", source);
   }
+  executionStage = "save-pending";
   fs.writeFileSync(stateFile, JSON.stringify(pending));
   if (pending.length) {
+    executionStage = "persist-site";
     for (const item of pending)
       if (!(await current(item.input))) throw Error("suggestion-changed-before-commit");
     fs.writeFileSync(catalogFile, `${JSON.stringify(catalog, null, 2)}\n`);
@@ -714,7 +771,7 @@ async function main() {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href)
   main().catch((error) => {
-    const reason = /^[a-z0-9-]{1,80}$/.test(error.message) ? error.message : "operation-failed";
-    console.error(`Cloud review failed (${reason}); saved suggestions remain available.`);
+    console.error(JSON.stringify(failureDetails(error, executionStage)));
+    console.error("Cloud review failed; saved suggestions remain available.");
     process.exitCode = 1;
   });
