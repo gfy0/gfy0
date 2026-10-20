@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  advanceQueueHead,
   changedPaths,
   commitAllowed,
   decide,
@@ -8,11 +9,120 @@ import {
   hasCompletedReview,
   liveMatches,
   mayGenerateProposal,
+  runBudgetedProposal,
   recoveryHold,
   resultBody,
   selectNumbers,
+  selectPendingQueue,
   sourceMatches,
 } from "./cloud-suggestion-review.mjs";
+import { versionOf } from "./github-suggestion-bridge.mjs";
+
+test("queue advances only after a confirmed terminal report, not a failed report or manual skip", () => {
+  assert.equal(advanceQueueHead(null, 6, undefined), 6);
+  for (const status of [
+    "published",
+    "existing",
+    "review-held",
+    "review-failed",
+    "needs-information",
+  ])
+    assert.equal(advanceQueueHead(6, 9, status), 9);
+  for (const status of [
+    undefined,
+    "review-queued",
+    "source-unavailable",
+    "approved",
+    "deployment-pending",
+  ])
+    assert.equal(advanceQueueHead(6, 9, status), 6);
+});
+
+test("queue pages past unrelated and terminal entries without losing the oldest pending version", async () => {
+  const issue = (number) => ({
+    number,
+    title: `[Project suggestion] Tool ${number}`,
+    body: "original",
+    state: "open",
+  });
+  const first = Array.from({ length: 100 }, (_, index) => issue(index + 1));
+  const final = (i, status) => [
+    {
+      user: { login: "github-actions[bot]", type: "Bot" },
+      body: `Your No.1 · Cloud review · ${versionOf(i).slice(0, 16)}\nPolicy: p\nStatus: ${status}`,
+    },
+  ];
+  for (const kind of ["unrelated", "terminal"]) {
+    const pages = [];
+    const result = await selectPendingQueue({
+      fetchPage: async (page) => {
+        pages.push(page);
+        if (page > 1) return [issue(101)];
+        return kind === "unrelated"
+          ? first.map((i, n) => (n % 2 ? { ...i, pull_request: {} } : { ...i, title: "other" }))
+          : first;
+      },
+      readComments: async (i) => (i.number <= 100 ? final(i, "published") : []),
+      policy: "p",
+    });
+    assert.deepEqual(pages, [1, 2]);
+    assert.deepEqual(result, [101]);
+  }
+  assert.deepEqual(
+    await selectPendingQueue({
+      fetchPage: async () => [issue(1), issue(2), { ...issue(3), body: "edited" }, issue(4)],
+      readComments: async (i) =>
+        final(issue(i.number), i.number === 1 ? "review-held" : "review-failed"),
+      policy: "p",
+    }),
+    [3],
+  );
+});
+
+test("queue scan is bounded and rejects incomplete or unordered pages", async () => {
+  let pages = 0;
+  await assert.rejects(
+    selectPendingQueue({
+      fetchPage: async (page) => {
+        pages++;
+        return Array.from({ length: 100 }, (_, i) => ({
+          number: (page - 1) * 100 + i + 1,
+          title: "unrelated",
+          state: "open",
+        }));
+      },
+      readComments: async () => {
+        throw Error("must not read unrelated comments");
+      },
+      policy: "p",
+    }),
+    /queue-scan-limit/,
+  );
+  assert.equal(pages, 10);
+  const issue = (number) => ({
+    number,
+    title: "[Project suggestion] Tool",
+    body: "",
+    state: "open",
+  });
+  const result = await selectPendingQueue({
+    fetchPage: async () => Array.from({ length: 100 }, (_, i) => issue(i + 1)),
+    readComments: async () => [],
+    policy: "p",
+  });
+  assert.deepEqual(
+    result,
+    Array.from({ length: 20 }, (_, i) => i + 1),
+  );
+  await assert.rejects(
+    selectPendingQueue({
+      fetchPage: async () => [issue(2), issue(1)],
+      readComments: async () => [],
+      policy: "p",
+    }),
+    /queue-order-invalid/,
+  );
+});
 
 test("cloud failure diagnostics expose only fixed stage, class and code", () => {
   const error = new TypeError("private message with credentials");
@@ -44,12 +154,89 @@ test("cloud failure diagnostics expose only fixed stage, class and code", () => 
     });
 });
 
-test("only bounded scheduled or manual review can invoke the model", () => {
-  for (const event of ["issues", "", "push"]) assert.equal(mayGenerateProposal(event, 0), false);
-  for (const event of ["schedule", "workflow_dispatch"]) {
+test("only bounded submission, scheduled or manual review can invoke the model", () => {
+  for (const event of ["", "push"]) assert.equal(mayGenerateProposal(event, 0), false);
+  for (const event of ["issues", "schedule", "workflow_dispatch"]) {
     assert.equal(mayGenerateProposal(event, 0), true);
     assert.equal(mayGenerateProposal(event, 1), false);
   }
+});
+
+test("every trigger shares a durable UTC-hour allowance before model execution", async () => {
+  let budget = { version: 1, hour: "2026-10-20T14" };
+  const order = [];
+  const attempt = (eventName, now, calls = 0, number = 9) =>
+    runBudgetedProposal({
+      eventName,
+      calls,
+      number,
+      queueHead: 9,
+      budget,
+      now,
+      persist: async (next) => {
+        order.push("persist");
+        budget = next;
+      },
+      generate: async () => {
+        order.push("model");
+        return { checked: true };
+      },
+    });
+  assert.deepEqual(await attempt("issues", "2026-10-20T15:00:00.000Z"), {
+    checked: true,
+  });
+  assert.deepEqual(order, ["persist", "model"]);
+  assert.deepEqual(budget, { version: 1, hour: "2026-10-20T15" });
+  for (const event of ["issues", "schedule", "workflow_dispatch"])
+    assert.equal(await attempt(event, "2026-10-20T15:59:59.999Z"), null);
+  assert.equal(await attempt("issues", "2026-10-20T16:00:00.000Z", 1), null);
+  assert.equal(await attempt("workflow_dispatch", "2026-10-20T16:00:00.000Z", 0, 10), null);
+  assert.deepEqual(order, ["persist", "model"]);
+  assert.deepEqual(await attempt("schedule", "2026-10-20T16:00:00.000Z"), {
+    checked: true,
+  });
+  assert.deepEqual(order, ["persist", "model", "persist", "model"]);
+});
+
+test("bad budgets and failed persistence never invoke the model; model failure never refunds", async () => {
+  let calls = 0;
+  let budget = { version: 1, hour: "2026-10-20T14" };
+  const options = {
+    eventName: "issues",
+    calls: 0,
+    number: 9,
+    queueHead: 9,
+    now: "2026-10-20T15:00:00.000Z",
+    persist: async () => {
+      throw Error("push failed");
+    },
+    generate: async () => {
+      calls++;
+      throw Error("model failed");
+    },
+  };
+  for (const invalid of [
+    null,
+    {},
+    { version: 2, hour: "2026-10-20T14" },
+    { version: 1, hour: "2026-02-30T14" },
+    { version: 1, hour: "2026-10-20T16" },
+    { version: 1, hour: "2026-10-20T14", issue: 9 },
+  ])
+    await assert.rejects(runBudgetedProposal({ ...options, budget: invalid }), {
+      name: "ModelBudgetError",
+    });
+  await assert.rejects(runBudgetedProposal({ ...options, budget }), {
+    name: "ModelBudgetError",
+  });
+  assert.equal(calls, 0);
+  const persist = async (next) => {
+    budget = next;
+  };
+  await assert.rejects(runBudgetedProposal({ ...options, budget, persist }), /model failed/);
+  assert.equal(calls, 1);
+  assert.equal(await runBudgetedProposal({ ...options, budget, persist }), null);
+  assert.equal(calls, 1);
 });
 
 test("failed model versions stop retrying until the submission changes", () => {
@@ -65,6 +252,16 @@ test("failed model versions stop retrying until the submission changes", () => {
   const spoof = comment("review-failed");
   spoof.user.type = "User";
   assert.equal(hasCompletedReview([spoof], "abc", "policy"), false);
+  assert.equal(
+    hasCompletedReview(
+      [{ user: { login: "gfy0" }, body: "Your No.1 · Review result · abc\nReviewed and listed" }],
+      "abc",
+      "policy",
+    ),
+    true,
+  );
+  for (const status of ["review-held", "published", "existing"])
+    assert.equal(hasCompletedReview([comment(status)], "abc", "policy"), true);
 });
 
 const source = {
@@ -243,6 +440,7 @@ test("queue is bounded and ignores PRs and non-suggestions", () => {
     state: "open",
   }));
   assert.equal(selectNumbers(issues).length, 100);
+  assert.deepEqual(selectNumbers([issues[4], issues[1], issues[0]]), [1, 2, 5]);
   assert.deepEqual(
     selectNumbers([
       { ...issues[0], pull_request: {} },

@@ -34,6 +34,7 @@ export function failureDetails(error, stage) {
     "initialization",
     "initial-source-fetch",
     "model-review",
+    "persist-model-budget",
     "report-model-failure",
     "source-decision",
     "report-review-held",
@@ -245,21 +246,86 @@ const messages = {
 
 export function mayGenerateProposal(eventName, calls) {
   return (
-    ["schedule", "workflow_dispatch"].includes(eventName) &&
+    ["issues", "schedule", "workflow_dispatch"].includes(eventName) &&
     calls < categoryPolicy.maxModelCallsPerRun
   );
+}
+
+class ModelBudgetError extends Error {
+  constructor() {
+    super("model-budget-unavailable");
+    this.name = "ModelBudgetError";
+  }
+}
+
+export async function runBudgetedProposal({
+  eventName,
+  calls,
+  number,
+  queueHead,
+  budget,
+  now,
+  persist,
+  generate,
+}) {
+  if (
+    !mayGenerateProposal(eventName, calls) ||
+    !Number.isSafeInteger(number) ||
+    number < 1 ||
+    number !== queueHead
+  )
+    return null;
+  const validHour = (hour) =>
+    typeof hour === "string" &&
+    /^\d{4}-\d{2}-\d{2}T\d{2}$/.test(hour) &&
+    Number.isFinite(Date.parse(`${hour}:00:00.000Z`)) &&
+    new Date(`${hour}:00:00.000Z`).toISOString().slice(0, 13) === hour;
+  const hour = typeof now === "string" ? now.slice(0, 13) : "";
+  if (
+    !budget ||
+    Object.keys(budget).sort().join("|") !== "hour|version" ||
+    budget.version !== 1 ||
+    !validHour(budget.hour) ||
+    !validHour(hour) ||
+    budget.hour > hour
+  )
+    throw new ModelBudgetError();
+  if (budget.hour === hour) return null;
+  try {
+    await persist({ version: 1, hour });
+  } catch {
+    throw new ModelBudgetError();
+  }
+  return generate();
+}
+
+const terminalReviewStatuses = new Set([
+  "published",
+  "existing",
+  "out-of-scope",
+  "review-held",
+  "review-failed",
+  "name-mismatch",
+  "needs-information",
+  "duplicate-uncertain",
+  "source-changed",
+]);
+
+export function advanceQueueHead(head, number, confirmedStatus) {
+  return head === null || terminalReviewStatuses.has(confirmedStatus) ? number : head;
 }
 
 export function hasCompletedReview(comments, version, policy) {
   return comments.some(
     (c) =>
-      c.user?.login === "github-actions[bot]" &&
-      c.user?.type === "Bot" &&
-      c.body?.startsWith(`Your No.1 · Cloud review · ${version.slice(0, 16)}\n`) &&
-      c.body.includes(`Policy: ${policy}`) &&
-      /Status: (published|existing|out-of-scope|review-held|review-failed|name-mismatch|needs-information|duplicate-uncertain|source-changed)$/.test(
-        c.body,
-      ),
+      (c.user?.login === "github-actions[bot]" &&
+        c.user?.type === "Bot" &&
+        c.body?.startsWith(`Your No.1 · Cloud review · ${version.slice(0, 16)}\n`) &&
+        c.body.includes(`Policy: ${policy}`) &&
+        terminalReviewStatuses.has(c.body.match(/Status: ([a-z-]+)$/)?.[1])) ||
+      (c.user?.login === "gfy0" &&
+        c.body?.startsWith(`Your No.1 · Review result · ${version.slice(0, 16)}`) &&
+        c.body.includes("Reviewed and listed")),
   );
 }
 
@@ -324,8 +390,32 @@ export function selectNumbers(issues) {
         Number.isSafeInteger(i.number) &&
         i.number > 0,
     )
+    .sort((a, b) => a.number - b.number)
     .slice(0, 100)
     .map((i) => i.number);
+}
+
+export async function selectPendingQueue({ fetchPage, readComments, policy }) {
+  const pending = [];
+  let previous = 0;
+  for (let page = 1; page <= 10; page++) {
+    const issues = await fetchPage(page);
+    if (!Array.isArray(issues) || issues.length > 100) throw Error("queue-page-invalid");
+    for (const issue of issues) {
+      if (!Number.isSafeInteger(issue.number) || issue.number <= previous)
+        throw Error("queue-order-invalid");
+      previous = issue.number;
+    }
+    const numbers = new Set(selectNumbers(issues));
+    for (const issue of issues) {
+      if (!numbers.has(issue.number)) continue;
+      if (hasCompletedReview(await readComments(issue), versionOf(issue), policy)) continue;
+      pending.push(issue.number);
+      if (pending.length === 20) return pending;
+    }
+    if (issues.length < 100) return pending;
+  }
+  throw Error("queue-scan-limit");
 }
 
 function publishProjection(site, decision) {
@@ -419,6 +509,7 @@ async function main() {
     if (!Array.isArray(data) || data.length >= 100) throw Error("comment-limit");
     return data;
   };
+  const reportedOutcomes = new Map();
   const report = async (input, status, source, slug) => {
     if (!(await current(input))) return false;
     const all = await comments(input.number);
@@ -435,6 +526,7 @@ async function main() {
         prior ? `issues/comments/${prior.id}` : `issues/${input.number}/comments`,
         { body },
       );
+    reportedOutcomes.set(input.number, status);
     return true;
   };
   const live = async (item) => {
@@ -524,13 +616,27 @@ async function main() {
   const catalog = JSON.parse(fs.readFileSync(catalogFile, "utf8"));
   const auditFile = path.join(site, "cloud-review-records.json");
   const audit = fs.existsSync(auditFile) ? JSON.parse(fs.readFileSync(auditFile, "utf8")) : [];
-  const eventNumber = event.issue?.number || Number(event.inputs?.issue_number);
-  const numbers =
-    Number.isSafeInteger(eventNumber) && eventNumber > 0
-      ? [eventNumber]
-      : selectNumbers(
-          await own("GET", "issues?state=open&sort=updated&direction=desc&per_page=100"),
-        );
+  const eventNumber = event.issue?.number;
+  const targetNumber = Number(event.inputs?.issue_number);
+  // Preserve an immediate receipt even when the bounded queue has older work.
+  if (Number.isSafeInteger(eventNumber) && eventNumber > 0) {
+    const issue = await own("GET", `issues/${eventNumber}`);
+    const all = await comments(eventNumber);
+    if (!hasCompletedReview(all, versionOf(issue), policy)) {
+      try {
+        await report(parseSuggestion(issue, templates), "review-queued");
+      } catch {
+        // The ordinary queue retains the existing invalid-input handling.
+      }
+    }
+  }
+  const numbers = await selectPendingQueue({
+    fetchPage: (page) =>
+      own("GET", `issues?state=open&sort=created&direction=asc&per_page=100&page=${page}`),
+    readComments: (issue) => comments(issue.number),
+    policy,
+  });
+  let queueHead = null;
   const pending = [];
   let handled = 0;
   for (const number of numbers) {
@@ -546,13 +652,12 @@ async function main() {
     const all = await comments(number);
     const version = versionOf(issue);
     if (hasCompletedReview(all, version, policy)) continue;
+    queueHead = advanceQueueHead(queueHead, number, reportedOutcomes.get(queueHead));
     if (
-      all.some(
-        (c) =>
-          c.user?.login === "gfy0" &&
-          c.body?.startsWith(`Your No.1 · Review result · ${version.slice(0, 16)}`) &&
-          c.body.includes("Reviewed and listed"),
-      )
+      process.env.GITHUB_EVENT_NAME === "workflow_dispatch" &&
+      Number.isSafeInteger(targetNumber) &&
+      targetNumber > 0 &&
+      targetNumber !== number
     )
       continue;
     handled++;
@@ -561,6 +666,10 @@ async function main() {
       input = parseSuggestion(issue, templates);
     } catch {
       await report({ number, version, locale: "en" }, "needs-information");
+      continue;
+    }
+    if (queueHead !== number) {
+      await report(input, "review-queued");
       continue;
     }
     let source = pins.sources.find((s) => sourceKey(s.source) === sourceKey(input.sourceUrl));
@@ -599,16 +708,52 @@ async function main() {
           await report(input, "review-held");
           continue;
         }
-        if (!mayGenerateProposal(process.env.GITHUB_EVENT_NAME, modelCalls)) {
-          await report(input, "review-queued");
-          continue;
-        }
-        modelCalls++;
         let model;
         try {
-          executionStage = "model-review";
-          model = await proposeSource(snapshot);
+          executionStage = "persist-model-budget";
+          const budgetFile = path.join(site, "cloud-review-budget.json");
+          let budget;
+          try {
+            budget = JSON.parse(fs.readFileSync(budgetFile, "utf8"));
+          } catch {
+            throw new ModelBudgetError();
+          }
+          model = await runBudgetedProposal({
+            eventName: process.env.GITHUB_EVENT_NAME,
+            calls: modelCalls,
+            number,
+            queueHead,
+            budget,
+            now: new Date().toISOString(),
+            persist: async (next) => {
+              if (git("diff", "--cached", "--name-only")) throw Error("unexpected-index");
+              fs.writeFileSync(budgetFile, `${JSON.stringify(next)}\n`);
+              git("add", "--", "cloud-review-budget.json");
+              if (git("diff", "--cached", "--name-only") !== "cloud-review-budget.json")
+                throw Error("unexpected-budget-file");
+              git(
+                "-c",
+                "user.name=github-actions[bot]",
+                "-c",
+                "user.email=41898282+github-actions[bot]@users.noreply.github.com",
+                "commit",
+                "-m",
+                "Reserve one UTC-hour cloud review allowance",
+              );
+              git("push", "origin", `HEAD:refs/heads/${branch}`);
+            },
+            generate: async () => {
+              modelCalls++;
+              executionStage = "model-review";
+              return proposeSource(snapshot);
+            },
+          });
+          if (!model) {
+            await report(input, "review-queued");
+            continue;
+          }
         } catch (error) {
+          if (error instanceof ModelBudgetError) throw error;
           console.error(JSON.stringify(failureDetails(error, "model-review")));
           executionStage = "report-model-failure";
           await report(input, "review-failed");
