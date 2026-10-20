@@ -3,7 +3,7 @@ on:
   issues:
     types: [opened, edited, reopened]
   schedule:
-    - cron: '23 * * * *'
+    - cron: '35 * * * *'
   workflow_dispatch:
     inputs:
       issue_number:
@@ -18,7 +18,7 @@ jobs:
   review:
     if: github.repository == 'gfy0/gfy0' && github.event.repository.private == false
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     environment:
       name: github-pages
       url: https://gfy0.github.io/gfy0/
@@ -41,7 +41,11 @@ jobs:
           path: site
           persist-credentials: false
       - name: Verify review boundaries
-        run: node --test automation/scripts/cloud-suggestion-review.test.mjs
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24
+      - name: Verify review and recovery boundaries
+        run: node --test automation/scripts/cloud-suggestion-review.test.mjs automation/scripts/cloud-source-review.test.mjs
       - name: Review and persist accepted project profiles
         id: prepare
         run: node automation/scripts/cloud-suggestion-review.mjs prepare

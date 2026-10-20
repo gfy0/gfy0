@@ -1,15 +1,40 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  decide,
-  sourceMatches,
-  resultBody,
-  commitAllowed,
-  selectNumbers,
   changedPaths,
+  commitAllowed,
+  decide,
+  hasCompletedReview,
   liveMatches,
+  mayGenerateProposal,
   recoveryHold,
+  resultBody,
+  selectNumbers,
+  sourceMatches,
 } from "./cloud-suggestion-review.mjs";
+
+test("only bounded scheduled or manual review can invoke the model", () => {
+  for (const event of ["issues", "", "push"]) assert.equal(mayGenerateProposal(event, 0), false);
+  for (const event of ["schedule", "workflow_dispatch"]) {
+    assert.equal(mayGenerateProposal(event, 0), true);
+    assert.equal(mayGenerateProposal(event, 1), false);
+  }
+});
+
+test("failed model versions stop retrying until the submission changes", () => {
+  const comment = (status) => ({
+    user: { login: "github-actions[bot]", type: "Bot" },
+    body: `Your No.1 · Cloud review · abc\nPolicy: policy\nStatus: ${status}`,
+  });
+  assert.equal(hasCompletedReview([comment("review-failed")], "abc", "policy"), true);
+  assert.equal(hasCompletedReview([comment("review-failed")], "edited", "policy"), false);
+  assert.equal(hasCompletedReview([comment("review-failed")], "abc", "new-policy"), false);
+  for (const status of ["review-queued", "source-unavailable", "deployment-pending"])
+    assert.equal(hasCompletedReview([comment(status)], "abc", "policy"), false);
+  const spoof = comment("review-failed");
+  spoof.user.type = "User";
+  assert.equal(hasCompletedReview([spoof], "abc", "policy"), false);
+});
 
 const source = {
   name: "Example",

@@ -6,7 +6,7 @@
     {
       "type": "markdown",
       "attributes": {
-        "value": "Debes iniciar sesión en GitHub. Tu identidad de GitHub y tu sugerencia serán públicas. No incluyas datos personales, confidenciales ni de pago.\n\nEnviar o editar una sugerencia inicia las comprobaciones en la nube. Conserva el mismo registro para ver el resultado. No se cobra.\n\nLa revisión se ejecuta en la nube sin el ordenador del operador. Solo las fuentes previamente revisadas de abajo pueden añadirse automáticamente. Las demás reciben un resultado de no inclusión; no hay revisión general. Si cambia la versión revisada, se detiene la aprobación. Depende de la disponibilidad de GitHub, sin plazo garantizado.\n\nFuentes admitidas para inclusión automática:\n- ESLint: https://github.com/eslint/eslint\n- Prettier: https://github.com/prettier/prettier\n- TypeScript: https://github.com/microsoft/TypeScript\n\nLa inclusión se confirma solo después de publicar la página. Una tarea en la nube reintenta los fallos de publicación; no envíes duplicados."
+        "value": "Debes iniciar sesión en GitHub. Tu identidad de GitHub y tu sugerencia serán públicas. No incluyas datos personales, confidenciales ni de pago.\n\nEnviar o editar una sugerencia inicia las comprobaciones en la nube. Conserva el mismo registro para ver el resultado. No se cobra.\n\nLa revisión se ejecuta en la nube sin el ordenador del operador. Puedes sugerir repositorios públicos de organizaciones de GitHub con una licencia de código abierto admitida. El README completo debe tener como máximo 20.000 caracteres e incluir una breve línea de texto que nombre el proyecto y describa su finalidad. No se incluyen proyectos de riesgo, inciertos o no verificables. Los cambios de fuente detienen la aprobación. El proceso depende de GitHub; no se garantiza un plazo ni la inclusión. Las sugerencias se guardan de inmediato. La revisión programada procesa como máximo un proyecto nuevo por hora; la cola y GitHub pueden causar demoras. La breve descripción de la fuente debe estar en inglés. Si falla la revisión, edita la misma sugerencia para volver a ponerla en cola.\n\nHerramientas de desarrollo admitidas:\n- Formateadores de código\n- Analizadores de código fuente\n- Comprobadores de tipos\n- Compiladores\n\nLa inclusión se confirma solo después de publicar la página. Una tarea en la nube reintenta los fallos de publicación; no envíes duplicados."
       }
     },
     {
@@ -24,7 +24,7 @@
       "id": "official-url",
       "attributes": {
         "label": "URL oficial pública",
-        "placeholder": "https://example.org/"
+        "placeholder": "https://github.com/organization/project"
       },
       "validations": {
         "required": true

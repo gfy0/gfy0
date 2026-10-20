@@ -6,7 +6,7 @@
     {
       "type": "markdown",
       "attributes": {
-        "value": "需要登录 GitHub。你的 GitHub 身份和建议内容会公开展示。请勿填写个人、机密或付款信息。\n\n提交或编辑投稿会启动云端核验。保存同一条记录即可查看结果，不收取费用。\n\n审核在云端运行，不依赖运营者电脑开机。新增项目自动收录目前仅覆盖下方逐项预审的来源；其他来源会得到未收录结果，暂不提供通用项目审核。已审核来源版本改变时会暂停自动放行。处理受 GitHub 可用性影响，不保证完成时限。\n\n可自动收录的来源:\n- ESLint: https://github.com/eslint/eslint\n- Prettier: https://github.com/prettier/prettier\n- TypeScript: https://github.com/microsoft/TypeScript\n\n项目页面发布成功后才会显示已收录。发布失败时由云端恢复任务重试，请勿重复投稿。"
+        "value": "需要登录 GitHub。你的 GitHub 身份和建议内容会公开展示。请勿填写个人、机密或付款信息。\n\n提交或编辑投稿会启动云端核验。保存同一条记录即可查看结果，不收取费用。\n\n审核在云端运行，不依赖运营者电脑开机。可推荐由 GitHub 组织维护、具有可核实开源许可的公开仓库。完整 README 需在 20,000 字符以内，并有一条包含项目名称和用途的简短原文说明。风险、不确定或无法核实的项目不会收录；来源变化时暂停放行。处理受 GitHub 可用性影响，不保证完成时限或收录。 投稿立即保存。云端定时任务每小时最多审核一个新项目，排队或 GitHub 延迟会增加等待时间。上述简短原文说明需使用英语。审核失败时，修改同一条投稿即可重新排队。\n\n支持审核的开发工具:\n- 代码格式化工具\n- 源代码检查工具\n- 类型检查工具\n- 编译器\n\n项目页面发布成功后才会显示已收录。发布失败时由云端恢复任务重试，请勿重复投稿。"
       }
     },
     {
@@ -24,7 +24,7 @@
       "id": "official-url",
       "attributes": {
         "label": "官方公开网址",
-        "placeholder": "https://example.org/"
+        "placeholder": "https://github.com/organization/project"
       },
       "validations": {
         "required": true

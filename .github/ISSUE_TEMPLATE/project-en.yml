@@ -6,7 +6,7 @@
     {
       "type": "markdown",
       "attributes": {
-        "value": "GitHub sign-in is required. Your GitHub identity and suggestion will be public. Do not include personal, confidential or payment information.\n\nSubmitting or editing a suggestion starts cloud checks. Keep the same record to see the result; no payment is requested.\n\nCloud review runs without the operator’s computer. Automatic new listings currently cover only the exact pre-reviewed sources below. Other sources receive a not-listed result; general project review is not available. Changes to reviewed source versions pause automatic approval. Processing depends on GitHub availability; no completion time is guaranteed.\n\nEligible automatic sources:\n- ESLint: https://github.com/eslint/eslint\n- Prettier: https://github.com/prettier/prettier\n- TypeScript: https://github.com/microsoft/TypeScript\n\nThe project is listed only after its page is published. If publishing fails, a cloud recovery task retries; do not submit a duplicate."
+        "value": "GitHub sign-in is required. Your GitHub identity and suggestion will be public. Do not include personal, confidential or payment information.\n\nSubmitting or editing a suggestion starts cloud checks. Keep the same record to see the result; no payment is requested.\n\nReview runs in the cloud without the operator’s computer. Suggest public GitHub repositories maintained by organizations with a supported open-source license. The complete README must be within 20,000 characters and include a short plain-text line naming the project and describing its purpose. Risky, uncertain or unverifiable projects are not listed. Source changes pause approval. Processing depends on GitHub availability; no completion time or listing is promised. Submissions are saved immediately. Scheduled cloud review processes at most one new project per hour; queues and GitHub delays can take longer. The short source description must be in English. If review fails, edit the same suggestion to queue it again.\n\nSupported development tools:\n- Code formatters\n- Source-code linters\n- Type checkers\n- Compilers\n\nThe project is listed only after its page is published. If publishing fails, a cloud recovery task retries; do not submit a duplicate."
       }
     },
     {
@@ -24,7 +24,7 @@
       "id": "official-url",
       "attributes": {
         "label": "Official public URL",
-        "placeholder": "https://example.org/"
+        "placeholder": "https://github.com/organization/project"
       },
       "validations": {
         "required": true

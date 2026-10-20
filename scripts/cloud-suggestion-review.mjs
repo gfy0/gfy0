@@ -1,7 +1,20 @@
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
+import {
+  categoryPolicy,
+  evaluateSource,
+  fetchSourceFacts,
+  githubSource,
+  makeSnapshot,
+  proposeSource,
+  reviewPolicyFingerprint,
+  sourceEvidence,
+  sourceRiskDetected,
+  sourceUnchanged,
+  verifiedRecovery,
+} from "./cloud-source-review.mjs";
 import {
   escapeHtml,
   hash,
@@ -19,7 +32,10 @@ const normalize = (s) =>
   String(s)
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "");
-const sourceKey = (s) => String(s).replace(/\/$/, "");
+const sourceKey = (s) => {
+  const repo = githubSource(String(s));
+  return repo ? `https://github.com/${repo.toLowerCase()}` : String(s).replace(/\/$/, "");
+};
 
 export function sourceMatches(source, facts) {
   if (!facts) return false;
@@ -51,6 +67,8 @@ export function sourceMatches(source, facts) {
 export function recoveryHold(record, policy, source, facts) {
   if (record?.policy !== policy || !source) return "source-changed";
   if (!facts) return "source-unavailable";
+  if (source.review?.policy === categoryPolicy.version && !verifiedRecovery(record, source, facts))
+    return "source-changed";
   return sourceMatches(source, facts) ? null : "source-changed";
 }
 
@@ -71,8 +89,14 @@ export function decide(input, sources, catalog, facts) {
 
 const messages = {
   es: {
+    "review-queued":
+      "Guardado en la cola: la revisión programada revisa como máximo un proyecto nuevo por hora. Consulta aquí el resultado.",
+    "review-failed":
+      "La revisión no terminó. Edita esta misma sugerencia para volver a ponerla en cola.",
+    "review-held":
+      "No incluido: no se pudo confirmar que cumple las categorías y condiciones de revisión automática. Puedes corregir este registro.",
     "out-of-scope":
-      "No incluido: fuente fuera de la lista previamente revisada (ESLint, Prettier, TypeScript). No se ofrece revisión general.",
+      "No incluido: la revisión automática acepta repositorios públicos de GitHub de herramientas generales de formato, linting, tipos y compilación.",
     "name-mismatch": "No incluido: corrige el nombre del proyecto y edita este registro.",
     "duplicate-uncertain":
       "No incluido: existe un nombre similar con otra fuente. No se ha fusionado ni duplicado.",
@@ -91,8 +115,13 @@ const messages = {
       "Revisión gratuita limitada a fuentes concretas, sin pagos. Resultado válido solo para esta versión del registro.",
   },
   ar: {
+    "review-queued":
+      "حُفظ في قائمة الانتظار: تراجع المهمة المجدولة مشروعًا جديدًا واحدًا كحد أقصى كل ساعة. تابع النتيجة هنا.",
+    "review-failed": "لم تكتمل المراجعة. عدّل الاقتراح نفسه لإعادته إلى قائمة الانتظار.",
+    "review-held":
+      "لم يُدرج: تعذر التأكد من استيفاء فئات وشروط المراجعة التلقائية. يمكنك تعديل هذا السجل.",
     "out-of-scope":
-      "لم يُدرج: المصدر خارج القائمة المراجعة مسبقًا (ESLint وPrettier وTypeScript). لا تتوفر مراجعة عامة.",
+      "لم يُدرج: تدعم المراجعة التلقائية مستودعات GitHub العامة لأدوات تنسيق الشيفرة وفحصها والتحقق من الأنواع والترجمة.",
     "name-mismatch": "لم يُدرج: صحّح اسم المشروع ثم عدّل السجل نفسه.",
     "duplicate-uncertain": "لم يُدرج: يوجد اسم مشابه بمصدر آخر. لم يتم الدمج أو التكرار.",
     "source-unavailable":
@@ -106,8 +135,13 @@ const messages = {
     scope: "مراجعة مجانية لمصادر محددة، دون مدفوعات. النتيجة تخص هذه النسخة من السجل فقط.",
   },
   ja: {
+    "review-queued":
+      "受付済み：クラウドの定期審査で毎時最大1件の新規プロジェクトを審査します。ここで結果を確認できます。",
+    "review-failed": "審査が完了しませんでした。同じ投稿を編集すると再び審査待ちになります。",
+    "review-held":
+      "未掲載：自動審査の対象分類と条件を満たすことを確認できませんでした。この記録を修正できます。",
     "out-of-scope":
-      "未掲載：事前確認済みの出典（ESLint、Prettier、TypeScript）以外です。一般審査には対応していません。",
+      "未掲載：自動審査の対象は、コード整形・静的検査・型検査・コンパイルを行う一般用途ツールの公開 GitHub リポジトリです。",
     "name-mismatch": "未掲載：プロジェクト名を修正し、同じ記録を編集してください。",
     "duplicate-uncertain":
       "未掲載：別の出典で類似の名前が存在します。統合や重複作成は行いませんでした。",
@@ -123,8 +157,13 @@ const messages = {
     scope: "出典を限定した無料審査です。決済はありません。結果はこの投稿の版にのみ適用されます。",
   },
   en: {
+    "review-queued":
+      "Saved in the queue: scheduled cloud review handles at most one new project per hour. Check the result here.",
+    "review-failed": "Review did not finish. Edit this same suggestion to queue it again.",
+    "review-held":
+      "Not listed: eligibility for the automatic review categories and conditions could not be confirmed. You can correct this same suggestion.",
     "out-of-scope":
-      "Not listed: this source is outside the pre-reviewed automatic listing scope (ESLint, Prettier, TypeScript). This is not a content rejection; no general review is promised.",
+      "Not listed: automatic review supports public GitHub repositories for ordinary code formatters, linters, type checkers and compilers.",
     "name-mismatch":
       "Not listed: use the exact project name shown in the eligible sources, then edit this same suggestion.",
     "duplicate-uncertain":
@@ -145,8 +184,12 @@ const messages = {
       "Free, limited source review. No payments. Result applies only to this suggestion version; edits require rechecking.",
   },
   "zh-CN": {
+    "review-queued": "投稿已保存并排队：云端定时审核每小时最多处理一个新项目，可在这里查看结果。",
+    "review-failed": "本次审核未完成。修改本条投稿即可重新排队，无需重复投稿。",
+    "review-held":
+      "未收录：无法确认符合自动审核的类别和条件。你可以修改本条投稿；不会未经核实直接发布。",
     "out-of-scope":
-      "未收录：来源不在预审自动收录范围（ESLint、Prettier、TypeScript）内。这不代表内容违规；目前不承诺通用内容审核。",
+      "未收录：自动审核目前支持 GitHub 公开仓库中的通用代码格式化、静态检查、类型检查和编译工具。",
     "name-mismatch": "未收录：请使用可收录来源中的准确项目名称，编辑本条投稿后重试。",
     "duplicate-uncertain": "未收录：已有同名项目但来源不同，未自动合并或重复添加。",
     "source-unavailable": "尚未收录：暂时无法核实 GitHub 来源，云端任务可重试恢复。",
@@ -159,6 +202,26 @@ const messages = {
     scope: "免费、限定来源审核，不收款。结果仅对应本次投稿版本，编辑后需要重新核验。",
   },
 };
+
+export function mayGenerateProposal(eventName, calls) {
+  return (
+    ["schedule", "workflow_dispatch"].includes(eventName) &&
+    calls < categoryPolicy.maxModelCallsPerRun
+  );
+}
+
+export function hasCompletedReview(comments, version, policy) {
+  return comments.some(
+    (c) =>
+      c.user?.login === "github-actions[bot]" &&
+      c.user?.type === "Bot" &&
+      c.body?.startsWith(`Your No.1 · Cloud review · ${version.slice(0, 16)}\n`) &&
+      c.body.includes(`Policy: ${policy}`) &&
+      /Status: (published|existing|out-of-scope|review-held|review-failed|name-mismatch|needs-information|duplicate-uncertain|source-changed)$/.test(
+        c.body,
+      ),
+  );
+}
 
 export function resultBody(input, status, _source, slug, policy = "") {
   const t = messages[input.locale] || messages.en;
@@ -269,15 +332,23 @@ async function main() {
   const pins = JSON.parse(
     fs.readFileSync(new URL("./free-cloud-sources.json", import.meta.url), "utf8"),
   );
-  const policy = hash(JSON.stringify(pins)).slice(0, 16);
+  const policy = reviewPolicyFingerprint(pins);
+  let activeSourceRepository = null;
+  let modelCalls = 0;
   const api = async (method, route, data) => {
     if (
       !route.startsWith(`/repos/${repository}/`) &&
       !(
         method === "GET" &&
-        pins.sources.some(
+        (pins.sources.some(
           (s) => route.startsWith(`/repos/${s.fullName}/`) || route === `/repos/${s.fullName}`,
-        )
+        ) ||
+          (activeSourceRepository &&
+            (route === `/repos/${activeSourceRepository}` ||
+              (route.startsWith(`/repos/${activeSourceRepository}/`) &&
+                /^\/(?:commits\/[^/?#]+|(?:readme|license)\?ref=[a-f0-9]{40})$/.test(
+                  route.slice(`/repos/${activeSourceRepository}`.length),
+                )))))
       )
     )
       throw Error("api-route-denied");
@@ -432,20 +503,7 @@ async function main() {
       continue;
     const all = await comments(number);
     const version = versionOf(issue);
-    const previous = all.find(
-      (c) =>
-        c.user?.login === "github-actions[bot]" &&
-        c.user?.type === "Bot" &&
-        c.body?.startsWith(`Your No.1 · Cloud review · ${version.slice(0, 16)}\n`) &&
-        c.body.includes(`Policy: ${policy}`),
-    );
-    if (
-      previous &&
-      /Status: (published|existing|out-of-scope|name-mismatch|needs-information|duplicate-uncertain|source-changed)$/.test(
-        previous.body,
-      )
-    )
-      continue;
+    if (hasCompletedReview(all, version, policy)) continue;
     if (
       all.some(
         (c) =>
@@ -463,9 +521,61 @@ async function main() {
       await report({ number, version, locale: "en" }, "needs-information");
       continue;
     }
-    const source = pins.sources.find((s) => sourceKey(s.source) === sourceKey(input.sourceUrl));
+    let source = pins.sources.find((s) => sourceKey(s.source) === sourceKey(input.sourceUrl));
+    source ||= audit.find(
+      (r) =>
+        r.issue === number &&
+        r.version === version &&
+        r.policy === policy &&
+        sourceKey(r.acceptedSource?.source) === sourceKey(input.sourceUrl),
+    )?.acceptedSource;
+    activeSourceRepository = githubSource(input.sourceUrl);
     let facts;
-    if (source) {
+    let snapshot;
+    let attestation;
+    const alreadyListed = catalog.projects.some(
+      (p) => sourceKey(p.source) === sourceKey(input.sourceUrl),
+    );
+    if (
+      (!source && activeSourceRepository && !alreadyListed) ||
+      source?.review?.policy === categoryPolicy.version
+    ) {
+      try {
+        facts = await fetchSourceFacts(api, input.sourceUrl);
+        snapshot = makeSnapshot(input.sourceUrl, facts);
+      } catch (error) {
+        const unavailable = /github-http-(429|5\d\d)|fetch|timeout|abort/i.test(
+          String(error.message),
+        );
+        await report(input, unavailable ? "source-unavailable" : "review-held");
+        continue;
+      }
+      if (!source) {
+        if (sourceRiskDetected(snapshot) || sourceEvidence(snapshot).length === 0) {
+          await report(input, "review-held");
+          continue;
+        }
+        if (!mayGenerateProposal(process.env.GITHUB_EVENT_NAME, modelCalls)) {
+          await report(input, "review-queued");
+          continue;
+        }
+        modelCalls++;
+        let model;
+        try {
+          model = proposeSource(snapshot);
+        } catch {
+          await report(input, "review-failed");
+          continue;
+        }
+        const proposal = evaluateSource(snapshot, model.proposal, input.name);
+        if (proposal.status !== "supported") {
+          await report(input, "review-held");
+          continue;
+        }
+        source = proposal.source;
+        attestation = model.attestation;
+      }
+    } else if (source) {
       try {
         const prefix = `/repos/${source.fullName}`;
         const [repo, commit, readme, license] = await Promise.all([
@@ -479,7 +589,7 @@ async function main() {
         facts = null;
       }
     }
-    const decision = decide(input, pins.sources, catalog, facts);
+    const decision = decide(input, source ? [source] : pins.sources, catalog, facts);
     if (!(await current(input))) continue;
     if (decision.status === "existing") {
       const recovered = audit.find(
@@ -529,6 +639,19 @@ async function main() {
       await report(input, decision.status);
       continue;
     }
+    if (snapshot) {
+      let fresh;
+      try {
+        fresh = await fetchSourceFacts(api, input.sourceUrl);
+      } catch {
+        await report(input, "source-unavailable");
+        continue;
+      }
+      if (!sourceUnchanged(snapshot, fresh)) {
+        await report(input, "source-changed");
+        continue;
+      }
+    }
     publishProjection(site, decision);
     catalog.projects.push({ name: source.name, source: source.source, path: decision.slug });
     audit.push({
@@ -546,6 +669,9 @@ async function main() {
       actor: "github-actions[bot]",
       run: `https://github.com/${repository}/actions/runs/${process.env.GITHUB_RUN_ID}`,
       reviewedAt: new Date().toISOString(),
+      ...(snapshot
+        ? { acceptedSource: source, snapshotHash: snapshot.hash, modelAttestation: attestation }
+        : {}),
     });
     pending.push({ input, source, slug: decision.slug });
     await report(input, "approved", source);
@@ -580,7 +706,7 @@ async function main() {
     JSON.stringify({
       handled,
       approvedOrRecovering: pending.length,
-      localModelCalls: 0,
+      hostedModelCalls: modelCalls,
       payments: false,
     }),
   );
