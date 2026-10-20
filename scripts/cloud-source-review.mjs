@@ -29,7 +29,7 @@ const digest = (value) => createHash("sha256").update(value).digest("hex");
 const sha = /^[a-f0-9]{40}$/;
 const kinds = {
   "code-formatter": /\b(?:code formatter|code formatting|formats? (?:source )?code)\b/i,
-  "static-linter": /\b(?:linter|linting)\b/i,
+  "static-linter": /\b(?:linters?|linting)\b/i,
   "type-checker": /\b(?:type checker|type checking|type-checker|type-checking)\b/i,
   compiler: /\bcompiler\b/i,
 };
