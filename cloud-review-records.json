@@ -164,5 +164,72 @@
       "serverStopped": true,
       "evidenceIndex": 0
     }
+  },
+  {
+    "issue": 10,
+    "version": "dcbf8dd6e5b9dd25b71247b50f909bec58afb1a7d539acf1500c5ea1c3018dbd",
+    "source": "https://github.com/stylelint/stylelint",
+    "repoId": 27549019,
+    "ownerId": 10076935,
+    "commit": "fc3f650bfccefaffb0761d9656c0a13eb93ec3de",
+    "readmeSha": "305d63d5b47668ea30ff955e9efd741467d20bd5",
+    "licenseSha": "58332c87ea1e5c839d61dcc54a200aa58093db12",
+    "policy": "3f3703131fb9c208",
+    "slug": "candidate-c17c13e4-b891-4681-8427-c439412d02e2",
+    "decision": "accepted-for-static-directory",
+    "actor": "github-actions[bot]",
+    "run": "https://github.com/gfy0/gfy0/actions/runs/39471445977",
+    "reviewedAt": "2026-10-20T18:07:22.813Z",
+    "acceptedSource": {
+      "fullName": "stylelint/stylelint",
+      "id": 27549019,
+      "ownerId": 10076935,
+      "ownerLogin": "stylelint",
+      "ownerType": "Organization",
+      "name": "Stylelint",
+      "branch": "main",
+      "commit": "fc3f650bfccefaffb0761d9656c0a13eb93ec3de",
+      "readmePath": "README.md",
+      "readmeSha": "305d63d5b47668ea30ff955e9efd741467d20bd5",
+      "licensePath": "LICENSE",
+      "licenseSha": "58332c87ea1e5c839d61dcc54a200aa58093db12",
+      "license": "MIT",
+      "source": "https://github.com/stylelint/stylelint",
+      "summaries": {
+        "en": "An open-source tool for checking source code.",
+        "zh-CN": "用于检查源代码的开源工具。",
+        "es": "Herramienta de código abierto para comprobar código fuente.",
+        "ar": "أداة مفتوحة المصدر لفحص الشيفرة المصدرية.",
+        "ja": "ソースコードを検査するオープンソースツール。"
+      },
+      "review": {
+        "decision": "accepted-static-project-profile-only",
+        "category": "software-development-tool",
+        "political": false,
+        "highRisk": false,
+        "privatePerson": false,
+        "uncertain": false,
+        "policy": "github-development-tools-2",
+        "toolKind": "static-linter",
+        "snapshotHash": "d8b563ecc42828d5370f792d3377fa8b001c8744592d52f0e5e581c2e188fed2",
+        "sourceId": "d8b563ec-c428-48d5-870f-792d3377fa8b",
+        "evidence": "https://github.com/stylelint/stylelint/blob/fc3f650bfccefaffb0761d9656c0a13eb93ec3de/README.md",
+        "nameQuote": "Stylelint",
+        "summaryQuote": "We recommend using a pretty printer like Prettier alongside Stylelint. Linters and pretty printers are complementary tools that work together to help you write consistent and error-free code."
+      }
+    },
+    "snapshotHash": "d8b563ecc42828d5370f792d3377fa8b001c8744592d52f0e5e581c2e188fed2",
+    "modelAttestation": {
+      "model": "gpt-oss-safeguard:20b",
+      "runtime": "v0.40.6",
+      "runtimeSha256": "c164ab8b1b28e2a247c29719b8e404c423c5b83ae64c3ab4e59d50c7ff7fc5e0",
+      "canonicalManifestSha256": "f2e795d0099c05eb8231a96445e6d2440aa381e1c03a1e3b3cb1f2cec296adff",
+      "inputSha256": "0f1f65a54b1361d0229e20058ae8e9f798e385dbe4287435f5b2d6373e067038",
+      "promptTokens": 1910,
+      "doneReason": "stop",
+      "cleanupVerified": true,
+      "serverStopped": true,
+      "evidenceIndex": 0
+    }
   }
 ]

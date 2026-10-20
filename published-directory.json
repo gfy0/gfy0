@@ -133,6 +133,11 @@
       "name": "SQLFluff",
       "source": "https://github.com/sqlfluff/sqlfluff",
       "path": "candidate-8b6da526-e975-4a83-867a-64d0de5e2b77"
+    },
+    {
+      "name": "Stylelint",
+      "source": "https://github.com/stylelint/stylelint",
+      "path": "candidate-c17c13e4-b891-4681-8427-c439412d02e2"
     }
   ]
 }
