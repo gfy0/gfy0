@@ -123,6 +123,11 @@
       "name": "Prettier",
       "source": "https://github.com/prettier/prettier",
       "path": "candidate-2ea7bb58-9a6e-416a-8f59-1b9a82f34d79"
+    },
+    {
+      "name": "dprint",
+      "source": "https://github.com/dprint/dprint",
+      "path": "candidate-55160d98-cef5-4a22-89fa-7e5d61e6564c"
     }
   ]
 }

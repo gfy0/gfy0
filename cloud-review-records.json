@@ -30,5 +30,72 @@
     "actor": "github-actions[bot]",
     "run": "https://github.com/gfy0/gfy0/actions/runs/39214869747",
     "reviewedAt": "2026-10-19T07:16:03.090Z"
+  },
+  {
+    "issue": 8,
+    "version": "0941474ce48dc48906dc08abce645578b375f703a8e111f772740141c899cad0",
+    "source": "https://github.com/dprint/dprint",
+    "repoId": 192136193,
+    "ownerId": 64226271,
+    "commit": "700f0a2ad4ec45eea713e6f2ec66e6c04b3c861e",
+    "readmeSha": "4bae2586865878c458b3c07ab4ffcf852058a741",
+    "licenseSha": "8c64c54183aaff2b0db2c632aac2eec1544513aa",
+    "policy": "9271d9b1b4872b42",
+    "slug": "candidate-55160d98-cef5-4a22-89fa-7e5d61e6564c",
+    "decision": "accepted-for-static-directory",
+    "actor": "github-actions[bot]",
+    "run": "https://github.com/gfy0/gfy0/actions/runs/39447447089",
+    "reviewedAt": "2026-10-20T15:24:13.562Z",
+    "acceptedSource": {
+      "fullName": "dprint/dprint",
+      "id": 192136193,
+      "ownerId": 64226271,
+      "ownerLogin": "dprint",
+      "ownerType": "Organization",
+      "name": "dprint",
+      "branch": "main",
+      "commit": "700f0a2ad4ec45eea713e6f2ec66e6c04b3c861e",
+      "readmePath": "README.md",
+      "readmeSha": "4bae2586865878c458b3c07ab4ffcf852058a741",
+      "licensePath": "LICENSE",
+      "licenseSha": "8c64c54183aaff2b0db2c632aac2eec1544513aa",
+      "license": "MIT",
+      "source": "https://github.com/dprint/dprint",
+      "summaries": {
+        "en": "An open-source code formatting tool.",
+        "zh-CN": "开源代码格式化工具。",
+        "es": "Herramienta de código abierto para dar formato al código.",
+        "ar": "أداة مفتوحة المصدر لتنسيق الشيفرة.",
+        "ja": "オープンソースのコード整形ツール。"
+      },
+      "review": {
+        "decision": "accepted-static-project-profile-only",
+        "category": "software-development-tool",
+        "political": false,
+        "highRisk": false,
+        "privatePerson": false,
+        "uncertain": false,
+        "policy": "github-development-tools-2",
+        "toolKind": "code-formatter",
+        "snapshotHash": "b113e43d48b287ef9f3ce2b6f2dbc760a9903d3c2c0e4c565f43cb05d6581f61",
+        "sourceId": "b113e43d-48b2-47ef-8f3c-e2b6f2dbc760",
+        "evidence": "https://github.com/dprint/dprint/blob/700f0a2ad4ec45eea713e6f2ec66e6c04b3c861e/README.md",
+        "nameQuote": "dprint",
+        "summaryQuote": "Monorepo for dprint—a pluggable and configurable code formatting platform."
+      }
+    },
+    "snapshotHash": "b113e43d48b287ef9f3ce2b6f2dbc760a9903d3c2c0e4c565f43cb05d6581f61",
+    "modelAttestation": {
+      "model": "gpt-oss-safeguard:20b",
+      "runtime": "v0.40.6",
+      "runtimeSha256": "c164ab8b1b28e2a247c29719b8e404c423c5b83ae64c3ab4e59d50c7ff7fc5e0",
+      "canonicalManifestSha256": "f2e795d0099c05eb8231a96445e6d2440aa381e1c03a1e3b3cb1f2cec296adff",
+      "inputSha256": "a307f48b6b556e78e17e59af905f1ef27bd5009f9db5f48545aeea5e80c76522",
+      "promptTokens": 2091,
+      "doneReason": "stop",
+      "cleanupVerified": true,
+      "serverStopped": true,
+      "evidenceIndex": 0
+    }
   }
 ]
