@@ -7,3 +7,8 @@
 #suggestion-results a,#suggestion-results h3{overflow-wrap:anywhere}
 .suggestion-state{font-weight:700;color:#203b63}
 .suggestion-text{white-space:pre-wrap;overflow-wrap:anywhere;background:#f0f2f6;border-radius:.5rem;padding:1rem;font:inherit;font-size:.95rem;line-height:1.6;direction:auto}
+
+.suggestion-review{margin-block:1.25rem;padding:1rem;border:1px solid #d6dae1;border-inline-start:4px solid #203b63;border-radius:.5rem;background:#fff}
+.suggestion-review h4{margin-block:0 .5rem;color:#203b63}
+.suggestion-review p{margin-block:.5rem;line-height:1.6}
+.suggestion-review a{display:inline-block;margin-block-start:.5rem;font-weight:700}
