@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -400,7 +400,7 @@ export function reviewPolicyFingerprint(pins) {
   ).slice(0, 16);
 }
 
-export function proposeSource(snapshot) {
+export async function proposeSource(snapshot) {
   if (process.env.GITHUB_ACTIONS !== "true" || process.env.GITHUB_REPOSITORY !== "gfy0/gfy0")
     throw Error("cloud-only-model");
   const file = path.join(process.env.RUNNER_TEMP, "your-no1-cloud-source-request.json");
@@ -412,17 +412,21 @@ export function proposeSource(snapshot) {
         (key) => [key, process.env[key]],
       ),
     );
-    const raw = execFileSync(
-      "python3",
-      ["-B", fileURLToPath(new URL("./cloud-source-model.py", import.meta.url)), file],
-      {
-        env,
-        encoding: "utf8",
-        timeout: 1130000,
-        maxBuffer: 64000,
-        stdio: ["ignore", "pipe", "pipe"],
-      },
-    );
+    const raw = await new Promise((resolve, reject) => {
+      const child = execFile(
+        "python3",
+        ["-B", fileURLToPath(new URL("./cloud-source-model.py", import.meta.url)), file],
+        {
+          env,
+          encoding: "utf8",
+          timeout: 1130000,
+          maxBuffer: 64000,
+          stdio: ["ignore", "pipe", "pipe"],
+        },
+        (error, stdout) => (error ? reject(error) : resolve(stdout)),
+      );
+      child.stdin?.end();
+    });
     const report = JSON.parse(raw);
     if (!validModelReport(report, digest(input))) throw Error("unverified-model-result");
     return {

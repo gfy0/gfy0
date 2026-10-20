@@ -607,7 +607,7 @@ async function main() {
         let model;
         try {
           executionStage = "model-review";
-          model = proposeSource(snapshot);
+          model = await proposeSource(snapshot);
         } catch (error) {
           console.error(JSON.stringify(failureDetails(error, "model-review")));
           executionStage = "report-model-failure";

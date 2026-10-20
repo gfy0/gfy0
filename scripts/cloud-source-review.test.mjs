@@ -1,5 +1,10 @@
 import assert from "node:assert/strict";
+import childProcess from "node:child_process";
 import { createHash } from "node:crypto";
+import fs from "node:fs";
+import { syncBuiltinESMExports } from "node:module";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 import {
   bindEvidenceSelection,
@@ -7,6 +12,7 @@ import {
   githubSource,
   makeSnapshot,
   modelInput,
+  proposeSource,
   sourceEvidence,
   sourceUnchanged,
   validModelReport,
@@ -291,4 +297,106 @@ test("missing identity, context exhaustion, incomplete generation and failed cle
     { model: "unverified" },
   ])
     assert.equal(validModelReport({ ...report, ...patch }, "input"), false);
+});
+
+test("model worker lets the event loop progress and cleans requests on success and failure", async (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "your-no1-worker-test-"));
+  const keys = ["GITHUB_ACTIONS", "GITHUB_REPOSITORY", "RUNNER_TEMP"];
+  const saved = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+  Object.assign(process.env, {
+    GITHUB_ACTIONS: "true",
+    GITHUB_REPOSITORY: "gfy0/gfy0",
+    RUNNER_TEMP: directory,
+  });
+  const request = path.join(directory, "your-no1-cloud-source-request.json");
+  let fail = false;
+  let pulse = false;
+  let inputClosed = false;
+  const synchronous = t.mock.method(childProcess, "execFileSync", () => {
+    throw Error("blocking-child-forbidden");
+  });
+  const asynchronous = t.mock.method(
+    childProcess,
+    "execFile",
+    (executable, args, options, callback) => {
+      assert.equal(executable, "python3");
+      assert.equal(args[0], "-B");
+      assert.equal(path.basename(args[1]), "cloud-source-model.py");
+      assert.equal(args[2], request);
+      assert.equal(options.timeout, 1130000);
+      assert.equal(options.maxBuffer, 64000);
+      assert.deepEqual(Object.keys(options.env).sort(), [
+        "GITHUB_ACTIONS",
+        "GITHUB_EVENT_NAME",
+        "GITHUB_REPOSITORY",
+        "PATH",
+        "RUNNER_TEMP",
+      ]);
+      assert.equal(Object.hasOwn(options.env, "GITHUB_TOKEN"), false);
+      const input = fs.readFileSync(request, "utf8");
+      assert.equal(input, modelInput(snapshot()));
+      setTimeout(() => {
+        assert.equal(pulse, true);
+        if (fail) return callback(Error("synthetic-worker-failure"));
+        callback(
+          null,
+          JSON.stringify({
+            status: "PROPOSAL_ONLY",
+            inputSha256: createHash("sha256").update(input).digest("hex"),
+            model: "gpt-oss-safeguard:20b",
+            runtime: "v0.40.6",
+            runtimeSha256: "c164ab8b1b28e2a247c29719b8e404c423c5b83ae64c3ab4e59d50c7ff7fc5e0",
+            canonicalManifestSha256:
+              "f2e795d0099c05eb8231a96445e6d2440aa381e1c03a1e3b3cb1f2cec296adff",
+            doneReason: "stop",
+            promptTokens: 100,
+            cleanupVerified: true,
+            serverStopped: true,
+            proposal: {
+              category: "general",
+              uncertain: false,
+              toolKind: "code-formatter",
+              evidenceIndex: 0,
+            },
+          }),
+          "",
+        );
+      }, 20);
+      return {
+        stdin: {
+          end() {
+            inputClosed = true;
+          },
+        },
+      };
+    },
+  );
+  syncBuiltinESMExports();
+  try {
+    setImmediate(() => {
+      pulse = true;
+    });
+    const pending = proposeSource(snapshot());
+    assert.equal(typeof pending?.then, "function");
+    assert.equal(fs.existsSync(request), true);
+    const result = await pending;
+    assert.equal(inputClosed, true);
+    assert.equal(result.proposal.review.summaryQuote, sourceEvidence(snapshot())[0].summaryQuote);
+    assert.equal(result.attestation.evidenceIndex, 0);
+    assert.equal(fs.existsSync(request), false);
+    fail = true;
+    await assert.rejects(proposeSource(snapshot()), /synthetic-worker-failure/);
+    assert.equal(fs.existsSync(request), false);
+    assert.equal(asynchronous.mock.callCount(), 2);
+  } finally {
+    synchronous.mock.restore();
+    asynchronous.mock.restore();
+    syncBuiltinESMExports();
+    for (const key of keys) {
+      if (saved[key] === undefined) delete process.env[key];
+      else process.env[key] = saved[key];
+    }
+    if (fs.existsSync(request)) fs.unlinkSync(request);
+    fs.rmdirSync(directory);
+  }
 });
