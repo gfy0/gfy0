@@ -1,0 +1,27 @@
+name: One-shot real-source cloud validation
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: your-no1-source-validation
+  cancel-in-progress: false
+jobs:
+  validate:
+    if: github.repository == 'gfy0/gfy0' && github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Read reviewed validation package
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Use existing project Node version
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24
+      - name: Verify admission and recovery boundaries
+        run: node --test validation/source-review/scripts/cloud-source-review.test.mjs validation/source-review/scripts/cloud-suggestion-review.test.mjs
+      - name: Validate one immutable real source without product writes
+        run: node validation/source-review/scripts/cloud-source-validation.mjs
