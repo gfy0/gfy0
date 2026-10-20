@@ -97,5 +97,72 @@
       "serverStopped": true,
       "evidenceIndex": 0
     }
+  },
+  {
+    "issue": 9,
+    "version": "d80b037d554ec73688082118880cbbf38cb1ee739b8cd2b9238170a2afdc19f6",
+    "source": "https://github.com/sqlfluff/sqlfluff",
+    "repoId": 155790228,
+    "ownerId": 71874918,
+    "commit": "ad1231eab8ad9951e186f3a695e8e9abc586300d",
+    "readmeSha": "344a29e343d42b2d86581c0f14c880b4128c5d75",
+    "licenseSha": "1c61d85de026444a6bab747f2e73142ea5b44371",
+    "policy": "49fcce3b845e3e96",
+    "slug": "candidate-8b6da526-e975-4a83-867a-64d0de5e2b77",
+    "decision": "accepted-for-static-directory",
+    "actor": "github-actions[bot]",
+    "run": "https://github.com/gfy0/gfy0/actions/runs/39455584768",
+    "reviewedAt": "2026-10-20T16:19:23.330Z",
+    "acceptedSource": {
+      "fullName": "sqlfluff/sqlfluff",
+      "id": 155790228,
+      "ownerId": 71874918,
+      "ownerLogin": "sqlfluff",
+      "ownerType": "Organization",
+      "name": "SQLFluff",
+      "branch": "main",
+      "commit": "ad1231eab8ad9951e186f3a695e8e9abc586300d",
+      "readmePath": "README.md",
+      "readmeSha": "344a29e343d42b2d86581c0f14c880b4128c5d75",
+      "licensePath": "LICENSE.md",
+      "licenseSha": "1c61d85de026444a6bab747f2e73142ea5b44371",
+      "license": "MIT",
+      "source": "https://github.com/sqlfluff/sqlfluff",
+      "summaries": {
+        "en": "An open-source tool for checking source code.",
+        "zh-CN": "用于检查源代码的开源工具。",
+        "es": "Herramienta de código abierto para comprobar código fuente.",
+        "ar": "أداة مفتوحة المصدر لفحص الشيفرة المصدرية.",
+        "ja": "ソースコードを検査するオープンソースツール。"
+      },
+      "review": {
+        "decision": "accepted-static-project-profile-only",
+        "category": "software-development-tool",
+        "political": false,
+        "highRisk": false,
+        "privatePerson": false,
+        "uncertain": false,
+        "policy": "github-development-tools-2",
+        "toolKind": "static-linter",
+        "snapshotHash": "0d5cc1fd5eca01ad0b7cae1d4e75068cde5b3488e5ee0d64127f959628284ed6",
+        "sourceId": "0d5cc1fd-5eca-41ad-8b7c-ae1d4e75068c",
+        "evidence": "https://github.com/sqlfluff/sqlfluff/blob/ad1231eab8ad9951e186f3a695e8e9abc586300d/README.md",
+        "nameQuote": "SQLFluff",
+        "summaryQuote": "**SQLFluff** is a dialect-flexible and configurable SQL linter. Designed"
+      }
+    },
+    "snapshotHash": "0d5cc1fd5eca01ad0b7cae1d4e75068cde5b3488e5ee0d64127f959628284ed6",
+    "modelAttestation": {
+      "model": "gpt-oss-safeguard:20b",
+      "runtime": "v0.40.6",
+      "runtimeSha256": "c164ab8b1b28e2a247c29719b8e404c423c5b83ae64c3ab4e59d50c7ff7fc5e0",
+      "canonicalManifestSha256": "f2e795d0099c05eb8231a96445e6d2440aa381e1c03a1e3b3cb1f2cec296adff",
+      "inputSha256": "73897869301267df272a440d90a58db66855a32d7cbd2430c0e0680c83b5ee2b",
+      "promptTokens": 3491,
+      "doneReason": "stop",
+      "cleanupVerified": true,
+      "serverStopped": true,
+      "evidenceIndex": 0
+    }
   }
 ]
