@@ -9,7 +9,7 @@ import {
 } from "../packages/domain/src/automated-candidate-review.ts";
 
 export const categoryPolicy = {
-  version: "github-development-tools-1",
+  version: "github-development-tools-2",
   maxReadmeCharacters: CANDIDATE_REVIEW_SOURCE_MAX_CHARACTERS,
   maxModelCallsPerRun: 1,
   kinds: ["code-formatter", "static-linter", "type-checker", "compiler"],
@@ -176,6 +176,43 @@ export function sourceRiskDetected(snapshot) {
   return sensitive.test(snapshot.text) || instructions.test(snapshot.text);
 }
 
+export function sourceEvidence(snapshot) {
+  const escaped = snapshot.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const namePattern = new RegExp(`(?<![A-Za-z0-9_-])${escaped}(?![A-Za-z0-9_-])`, "i");
+  const evidence = [];
+  for (const line of snapshot.text.split(/\r?\n/)) {
+    if (!line || line.length > 500 || /https?:\/\/|[[\]<>]/i.test(line)) continue;
+    const name = line.match(namePattern)?.[0];
+    if (!name) continue;
+    for (const [toolKind, pattern] of Object.entries(kinds)) {
+      if (pattern.test(line)) evidence.push({ nameQuote: name, summaryQuote: line, toolKind });
+      if (evidence.length === 8) return evidence;
+    }
+  }
+  return evidence;
+}
+
+export function bindEvidenceSelection(snapshot, selection) {
+  if (
+    !sameKeys(selection, ["category", "uncertain", "toolKind", "evidenceIndex"]) ||
+    !Number.isSafeInteger(selection.evidenceIndex) ||
+    selection.evidenceIndex < 0
+  )
+    return null;
+  const evidence = sourceEvidence(snapshot)[selection.evidenceIndex];
+  if (!evidence || evidence.toolKind !== selection.toolKind) return null;
+  return {
+    snapshotHash: snapshot.hash,
+    toolKind: selection.toolKind,
+    review: {
+      category: selection.category,
+      uncertain: selection.uncertain,
+      nameQuote: evidence.nameQuote,
+      summaryQuote: evidence.summaryQuote,
+    },
+  };
+}
+
 export function evaluateSource(snapshot, proposal, submittedName) {
   const held = { status: "review-held" };
   if (
@@ -281,6 +318,7 @@ export function modelInput(snapshot) {
     sourceId: snapshot.sourceId,
     name: snapshot.name,
     text: snapshot.text,
+    evidence: sourceEvidence(snapshot),
   });
 }
 
@@ -309,6 +347,18 @@ export function verifiedRecovery(record, source, facts) {
         { ...record.modelAttestation, status: "PROPOSAL_ONLY" },
         digest(modelInput(snapshot)),
       )
+    )
+      return false;
+    const bound = bindEvidenceSelection(snapshot, {
+      category: "general",
+      uncertain: false,
+      toolKind: source.review.toolKind,
+      evidenceIndex: record.modelAttestation.evidenceIndex,
+    });
+    if (
+      !bound ||
+      bound.review.nameQuote !== source.review.nameQuote ||
+      bound.review.summaryQuote !== source.review.summaryQuote
     )
       return false;
     const result = evaluateSource(
@@ -376,7 +426,7 @@ export function proposeSource(snapshot) {
     const report = JSON.parse(raw);
     if (!validModelReport(report, digest(input))) throw Error("unverified-model-result");
     return {
-      proposal: report.proposal,
+      proposal: bindEvidenceSelection(snapshot, report.proposal),
       attestation: {
         model: report.model,
         runtime: report.runtime,
@@ -387,6 +437,9 @@ export function proposeSource(snapshot) {
         doneReason: report.doneReason,
         cleanupVerified: report.cleanupVerified,
         serverStopped: report.serverStopped,
+        evidenceIndex: Number.isSafeInteger(report.proposal?.evidenceIndex)
+          ? report.proposal.evidenceIndex
+          : null,
       },
     };
   } finally {

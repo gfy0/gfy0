@@ -10,6 +10,7 @@ import {
   makeSnapshot,
   proposeSource,
   reviewPolicyFingerprint,
+  sourceEvidence,
   sourceRiskDetected,
   sourceUnchanged,
   verifiedRecovery,
@@ -528,7 +529,7 @@ async function main() {
         continue;
       }
       if (!source) {
-        if (sourceRiskDetected(snapshot)) {
+        if (sourceRiskDetected(snapshot) || sourceEvidence(snapshot).length === 0) {
           await report(input, "review-held");
           continue;
         }

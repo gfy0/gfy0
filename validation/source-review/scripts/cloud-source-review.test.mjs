@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
 import {
+  bindEvidenceSelection,
   evaluateSource,
   githubSource,
   makeSnapshot,
   modelInput,
+  sourceEvidence,
   sourceUnchanged,
   validModelReport,
 } from "./cloud-source-review.mjs";
@@ -70,6 +72,60 @@ test("source-bound ordinary tool proposal passes only the static admission gate"
   assert.equal(result.source.name, "FormatKit");
   assert.equal(result.source.review.decision, "accepted-static-project-profile-only");
   assert.equal(result.domain.publishable, false);
+});
+test("program extracts verbatim evidence and model can only select a bound index", () => {
+  const s = snapshot();
+  const evidence = sourceEvidence(s);
+  assert.deepEqual(evidence, [
+    {
+      nameQuote: "FormatKit",
+      summaryQuote: "FormatKit is a general code formatter for JavaScript.",
+      toolKind: "code-formatter",
+    },
+  ]);
+  assert.deepEqual(JSON.parse(modelInput(s)).evidence, evidence);
+  const selection = {
+    category: "general",
+    uncertain: false,
+    toolKind: "code-formatter",
+    evidenceIndex: 0,
+  };
+  assert.deepEqual(bindEvidenceSelection(s, selection), proposal(s));
+  for (const patch of [
+    { evidenceIndex: -1 },
+    { evidenceIndex: 1 },
+    { evidenceIndex: "0" },
+    { evidenceIndex: 0.5 },
+    { toolKind: "compiler" },
+    { summaryQuote: "A rewritten description" },
+    { snapshotHash: s.hash },
+  ])
+    assert.equal(bindEvidenceSelection(s, { ...selection, ...patch }), null);
+  for (const patch of [
+    { category: "political" },
+    { category: "high-risk" },
+    { category: "unknown" },
+    { category: "private-person" },
+    { uncertain: true },
+  ])
+    assert.equal(
+      evaluateSource(s, bindEvidenceSelection(s, { ...selection, ...patch }), "FormatKit").status,
+      "review-held",
+    );
+});
+test("no truncation, URL-only name or plugin-name match can create evidence", () => {
+  for (const text of [
+    "FormatKit-plugin is a code formatter.",
+    "A code formatter: https://github.com/example/FormatKit",
+    `FormatKit is a code formatter ${"x".repeat(500)}.`,
+    "FormatKit\nis a code formatter.",
+  ]) {
+    const s = makeSnapshot("https://github.com/example/FormatKit", {
+      ...facts,
+      readme: blob("README.md", text, "d".repeat(40)),
+    });
+    assert.deepEqual(sourceEvidence(s), []);
+  }
 });
 test("political, high-risk, unknown, private-person and uncertain remain held", () => {
   const s = snapshot();
@@ -188,6 +244,7 @@ test("recovery accepts only the complete unchanged reviewed source and attestati
       promptTokens: 6000,
       cleanupVerified: true,
       serverStopped: true,
+      evidenceIndex: 0,
     },
   };
   assert.equal(recoveryHold(record, "same", accepted, facts), null);
@@ -199,6 +256,7 @@ test("recovery accepts only the complete unchanged reviewed source and attestati
     (r) => (r.modelAttestation.inputSha256 = "0".repeat(64)),
     (r) => (r.modelAttestation.cleanupVerified = false),
     (r) => (r.modelAttestation.promptTokens = 7168),
+    (r) => (r.modelAttestation.evidenceIndex = 1),
     (r) => (r.acceptedSource.review.sourceId = "bad"),
     (r) => (r.acceptedSource.review.toolKind = "compiler"),
     (r) => (r.acceptedSource.review.summaryQuote = "Invented approval"),

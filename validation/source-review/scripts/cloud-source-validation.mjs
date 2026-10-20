@@ -103,6 +103,11 @@ try {
   assert.equal(evaluated.source.name, "dprint");
   stage = "expected-category";
   assert.equal(proposal.toolKind, "code-formatter");
+  stage = "expected-verbatim-evidence";
+  assert.equal(
+    evaluated.source.review.summaryQuote,
+    "Monorepo for dprint—a pluggable and configurable code formatting platform.",
+  );
   stage = "no-publication-authority";
   assert.equal(evaluated.domain.publishable, false);
   Object.assign(report, {
