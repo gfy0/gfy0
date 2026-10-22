@@ -378,7 +378,7 @@ test("model worker lets the event loop progress and cleans requests on success a
       assert.equal(Object.hasOwn(options.env, "GITHUB_TOKEN"), false);
       const input = fs.readFileSync(request, "utf8");
       assert.equal(input, modelInput(snapshot()));
-      setTimeout(() => {
+      setImmediate(() => {
         assert.equal(pulse, true);
         if (fail) return callback(Error("synthetic-worker-failure"));
         callback(
@@ -404,7 +404,7 @@ test("model worker lets the event loop progress and cleans requests on success a
           }),
           "",
         );
-      }, 20);
+      });
       return {
         stdin: {
           end() {
