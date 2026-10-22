@@ -400,6 +400,40 @@ export function reviewPolicyFingerprint(pins) {
   ).slice(0, 16);
 }
 
+export function modelFailureDetails(report) {
+  if (report?.status !== "FAIL_STOP_ROUTE") return null;
+  const stages = [
+    "scope",
+    "disk-capacity",
+    "runtime-download",
+    "runtime-checksum",
+    "runtime-extract",
+    "runtime-start",
+    "model-download",
+    "model-digest",
+    "inference-source",
+  ];
+  const types = [
+    "TimeoutError",
+    "AssertionError",
+    "CalledProcessError",
+    "TimeoutExpired",
+    "URLError",
+    "HTTPError",
+    "JSONDecodeError",
+    "OSError",
+    "ValueError",
+    "KeyError",
+  ];
+  return {
+    status: "FAIL_STOP_ROUTE",
+    failedStage: stages.includes(report.failedStage) ? report.failedStage : "other",
+    errorType: types.includes(report.errorType) ? report.errorType : "other",
+    cleanupVerified: report.cleanupVerified === true,
+    serverStopped: report.serverStopped === true,
+  };
+}
+
 export async function proposeSource(snapshot) {
   if (process.env.GITHUB_ACTIONS !== "true" || process.env.GITHUB_REPOSITORY !== "gfy0/gfy0")
     throw Error("cloud-only-model");
@@ -423,7 +457,16 @@ export async function proposeSource(snapshot) {
           maxBuffer: 64000,
           stdio: ["ignore", "pipe", "pipe"],
         },
-        (error, stdout) => (error ? reject(error) : resolve(stdout)),
+        (error, stdout) => {
+          if (!error) return resolve(stdout);
+          try {
+            const failure = modelFailureDetails(JSON.parse(stdout));
+            if (failure) error.modelFailure = failure;
+          } catch {
+            // Never retain malformed output or raw process messages.
+          }
+          reject(error);
+        },
       );
       child.stdin?.end();
     });

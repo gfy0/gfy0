@@ -154,6 +154,33 @@ test("cloud failure diagnostics expose only fixed stage, class and code", () => 
     });
 });
 
+test("failed model diagnostics preserve safe stage without leaking worker output", () => {
+  const error = Object.assign(new Error("private secret"), {
+    modelFailure: {
+      status: "FAIL_STOP_ROUTE",
+      failedStage: "inference-source",
+      errorType: "TimeoutError",
+      cleanupVerified: true,
+      serverStopped: true,
+      proposal: "secret",
+      stderr: "credentials",
+    },
+  });
+  assert.deepEqual(failureDetails(error, "model-review").model, {
+    status: "FAIL_STOP_ROUTE",
+    failedStage: "inference-source",
+    errorType: "TimeoutError",
+    cleanupVerified: true,
+    serverStopped: true,
+  });
+  assert.ok(!/secret|credentials/.test(JSON.stringify(failureDetails(error, "model-review"))));
+  error.modelFailure.failedStage = "private stage";
+  error.modelFailure.errorType = "private type";
+  assert.equal(failureDetails(error, "model-review").model.failedStage, "other");
+  assert.equal(failureDetails(error, "model-review").model.errorType, "other");
+  assert.equal(failureDetails(error, "finish").model, undefined);
+});
+
 test("only bounded submission, scheduled or manual review can invoke the model", () => {
   for (const event of ["", "push"]) assert.equal(mayGenerateProposal(event, 0), false);
   for (const event of ["issues", "schedule", "workflow_dispatch"]) {

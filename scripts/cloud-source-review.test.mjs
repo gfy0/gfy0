@@ -353,6 +353,7 @@ test("model worker lets the event loop progress and cleans requests on success a
   });
   const request = path.join(directory, "your-no1-cloud-source-request.json");
   let fail = false;
+  let failureOutput;
   let pulse = false;
   let inputClosed = false;
   const synchronous = t.mock.method(childProcess, "execFileSync", () => {
@@ -380,7 +381,7 @@ test("model worker lets the event loop progress and cleans requests on success a
       assert.equal(input, modelInput(snapshot()));
       setImmediate(() => {
         assert.equal(pulse, true);
-        if (fail) return callback(Error("synthetic-worker-failure"));
+        if (fail) return callback(Error("synthetic-worker-failure"), failureOutput);
         callback(
           null,
           JSON.stringify({
@@ -430,7 +431,33 @@ test("model worker lets the event loop progress and cleans requests on success a
     fail = true;
     await assert.rejects(proposeSource(snapshot()), /synthetic-worker-failure/);
     assert.equal(fs.existsSync(request), false);
-    assert.equal(asynchronous.mock.callCount(), 2);
+    failureOutput = JSON.stringify({
+      status: "FAIL_STOP_ROUTE",
+      failedStage: "inference-source",
+      errorType: "TimeoutError",
+      cleanupVerified: true,
+      serverStopped: true,
+      proposal: "private source",
+      message: "secret",
+    });
+    await assert.rejects(proposeSource(snapshot()), (error) => {
+      assert.deepEqual(error.modelFailure, {
+        status: "FAIL_STOP_ROUTE",
+        failedStage: "inference-source",
+        errorType: "TimeoutError",
+        cleanupVerified: true,
+        serverStopped: true,
+      });
+      assert.ok(!JSON.stringify(error.modelFailure).includes("secret"));
+      return true;
+    });
+    failureOutput = "malformed private source";
+    await assert.rejects(proposeSource(snapshot()), (error) => {
+      assert.equal(error.modelFailure, undefined);
+      return true;
+    });
+    assert.equal(fs.existsSync(request), false);
+    assert.equal(asynchronous.mock.callCount(), 4);
   } finally {
     synchronous.mock.restore();
     asynchronous.mock.restore();

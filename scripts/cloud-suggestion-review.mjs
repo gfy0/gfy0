@@ -8,6 +8,7 @@ import {
   fetchSourceFacts,
   githubSource,
   makeSnapshot,
+  modelFailureDetails,
   proposeSource,
   reviewPolicyFingerprint,
   sourceEvidence,
@@ -67,6 +68,9 @@ export function failureDetails(error, stage) {
     stage: stages.includes(stage) ? stage : "other",
     name: names.includes(error?.name) ? error.name : "other",
     code: codes.includes(code) ? code : "other",
+    ...(stage === "model-review" && modelFailureDetails(error?.modelFailure)
+      ? { model: modelFailureDetails(error.modelFailure) }
+      : {}),
   };
 }
 const normalize = (s) =>
