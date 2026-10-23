@@ -138,6 +138,11 @@
       "name": "Stylelint",
       "source": "https://github.com/stylelint/stylelint",
       "path": "candidate-c17c13e4-b891-4681-8427-c439412d02e2"
+    },
+    {
+      "name": "Ruff",
+      "source": "https://github.com/astral-sh/ruff",
+      "path": "candidate-2d363b22-7dc6-41ba-8ec1-15df712aae9b"
     }
   ]
 }

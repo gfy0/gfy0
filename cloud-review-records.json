@@ -231,5 +231,72 @@
       "serverStopped": true,
       "evidenceIndex": 0
     }
+  },
+  {
+    "issue": 11,
+    "version": "03db64fbe5167ac7e2823aeb1cd77fe9115b4b93083ca5ddb7ff46f59f0a332d",
+    "source": "https://github.com/astral-sh/ruff",
+    "repoId": 523043277,
+    "ownerId": 115962839,
+    "commit": "2fa2ecbbf745e8de8b785e7c5cc7aff83f7f2ed4",
+    "readmeSha": "9e55650ba461e249c1376a20434e5cd1149dd21f",
+    "licenseSha": "655a0c76fc5539b2f8e63b673741a5fd0e0c5799",
+    "policy": "79733de29e0faced",
+    "slug": "candidate-2d363b22-7dc6-41ba-8ec1-15df712aae9b",
+    "decision": "accepted-for-static-directory",
+    "actor": "github-actions[bot]",
+    "run": "https://github.com/gfy0/gfy0/actions/runs/39948506798",
+    "reviewedAt": "2026-10-23T11:56:06.400Z",
+    "acceptedSource": {
+      "fullName": "astral-sh/ruff",
+      "id": 523043277,
+      "ownerId": 115962839,
+      "ownerLogin": "astral-sh",
+      "ownerType": "Organization",
+      "name": "Ruff",
+      "branch": "main",
+      "commit": "2fa2ecbbf745e8de8b785e7c5cc7aff83f7f2ed4",
+      "readmePath": "README.md",
+      "readmeSha": "9e55650ba461e249c1376a20434e5cd1149dd21f",
+      "licensePath": "LICENSE",
+      "licenseSha": "655a0c76fc5539b2f8e63b673741a5fd0e0c5799",
+      "license": "MIT",
+      "source": "https://github.com/astral-sh/ruff",
+      "summaries": {
+        "en": "An open-source tool for checking source code.",
+        "zh-CN": "用于检查源代码的开源工具。",
+        "es": "Herramienta de código abierto para comprobar código fuente.",
+        "ar": "أداة مفتوحة المصدر لفحص الشيفرة المصدرية.",
+        "ja": "ソースコードを検査するオープンソースツール。"
+      },
+      "review": {
+        "decision": "accepted-static-project-profile-only",
+        "category": "software-development-tool",
+        "political": false,
+        "highRisk": false,
+        "privatePerson": false,
+        "uncertain": false,
+        "policy": "github-development-tools-2",
+        "toolKind": "static-linter",
+        "snapshotHash": "325ee95bb4d1017c26bee42964f453400485dfd8e4046916efb822631f16babe",
+        "sourceId": "325ee95b-b4d1-417c-86be-e42964f45340",
+        "evidence": "https://github.com/astral-sh/ruff/blob/2fa2ecbbf745e8de8b785e7c5cc7aff83f7f2ed4/README.md",
+        "nameQuote": "Ruff",
+        "summaryQuote": "To run Ruff as a linter, try any of the following:"
+      }
+    },
+    "snapshotHash": "325ee95bb4d1017c26bee42964f453400485dfd8e4046916efb822631f16babe",
+    "modelAttestation": {
+      "model": "gpt-oss-safeguard:20b",
+      "runtime": "v0.40.6",
+      "runtimeSha256": "c164ab8b1b28e2a247c29719b8e404c423c5b83ae64c3ab4e59d50c7ff7fc5e0",
+      "canonicalManifestSha256": "f2e795d0099c05eb8231a96445e6d2440aa381e1c03a1e3b3cb1f2cec296adff",
+      "inputSha256": "55e4a70f544c55807959663094ca94ae3566a999654be480a51b798cbcf3c176",
+      "promptTokens": 6768,
+      "doneReason": "stop",
+      "cleanupVerified": true,
+      "serverStopped": true,
+      "evidenceIndex": 0
+    }
   }
 ]
