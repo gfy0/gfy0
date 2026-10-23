@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-23T11:56:38.780Z",
+  "records": [
+    {
+      "issue": 6,
+      "version": "01ce6620402e2997a50445d5464a3ab2a31d393e49cd41eba02ade00590f0ac4",
+      "status": "existing",
+      "observedAt": "2026-10-23T11:47:14.524Z",
+      "issueUrl": "https://github.com/gfy0/gfy0/issues/6",
+      "candidateUrl": "https://gfy0.github.io/gfy0/zh-CN/candidates/candidate-bd71d4f1-f43c-43e5-8952-21266034fddf/"
+    },
+    {
+      "issue": 7,
+      "version": "f0c823ea2de834588363fae31bb5412646f4da591610beb55278447dde4c3757",
+      "status": "existing",
+      "observedAt": "2026-10-23T11:47:16.646Z",
+      "issueUrl": "https://github.com/gfy0/gfy0/issues/7",
+      "candidateUrl": "https://gfy0.github.io/gfy0/zh-CN/candidates/candidate-2ea7bb58-9a6e-416a-8f59-1b9a82f34d79/"
+    },
+    {
+      "issue": 8,
+      "version": "0941474ce48dc48906dc08abce645578b375f703a8e111f772740141c899cad0",
+      "status": "existing",
+      "observedAt": "2026-10-23T11:47:19.424Z",
+      "issueUrl": "https://github.com/gfy0/gfy0/issues/8",
+      "candidateUrl": "https://gfy0.github.io/gfy0/zh-CN/candidates/candidate-55160d98-cef5-4a22-89fa-7e5d61e6564c/"
+    },
+    {
+      "issue": 9,
+      "version": "d80b037d554ec73688082118880cbbf38cb1ee739b8cd2b9238170a2afdc19f6",
+      "status": "existing",
+      "observedAt": "2026-10-23T11:47:21.190Z",
+      "issueUrl": "https://github.com/gfy0/gfy0/issues/9",
+      "candidateUrl": "https://gfy0.github.io/gfy0/zh-CN/candidates/candidate-8b6da526-e975-4a83-867a-64d0de5e2b77/"
+    },
+    {
+      "issue": 10,
+      "version": "dcbf8dd6e5b9dd25b71247b50f909bec58afb1a7d539acf1500c5ea1c3018dbd",
+      "status": "existing",
+      "observedAt": "2026-10-23T11:47:23.137Z",
+      "issueUrl": "https://github.com/gfy0/gfy0/issues/10",
+      "candidateUrl": "https://gfy0.github.io/gfy0/zh-CN/candidates/candidate-c17c13e4-b891-4681-8427-c439412d02e2/"
+    },
+    {
+      "issue": 11,
+      "version": "03db64fbe5167ac7e2823aeb1cd77fe9115b4b93083ca5ddb7ff46f59f0a332d",
+      "status": "published",
+      "observedAt": "2026-10-23T11:56:38.779Z",
+      "issueUrl": "https://github.com/gfy0/gfy0/issues/11",
+      "candidateUrl": "https://gfy0.github.io/gfy0/zh-CN/candidates/candidate-2d363b22-7dc6-41ba-8ec1-15df712aae9b/"
+    }
+  ]
+}
