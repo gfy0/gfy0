@@ -25,6 +25,12 @@ import {
   repository,
   versionOf,
 } from "./github-suggestion-bridge.mjs";
+import {
+  createResultRecord,
+  mergeResultSnapshot,
+  snapshotDeploymentNeeded,
+  validateResultSnapshot,
+} from "./cloud-suggestion-results.mjs";
 
 const base = "https://gfy0.github.io/gfy0";
 const branch = "codex/your-no1-pages";
@@ -463,6 +469,11 @@ async function main() {
   if (!token) throw Error("scoped-token-required");
   const site = path.resolve(process.env.SITE_DIRECTORY);
   const stateFile = path.join(process.env.RUNNER_TEMP, "your-no1-cloud-review.json");
+  const resultQueueFile = path.join(
+    process.env.RUNNER_TEMP,
+    "your-no1-cloud-result-projections.json",
+  );
+  if (!fs.existsSync(resultQueueFile)) fs.writeFileSync(resultQueueFile, "[]\n", { mode: 0o600 });
   const pins = JSON.parse(
     fs.readFileSync(new URL("./free-cloud-sources.json", import.meta.url), "utf8"),
   );
@@ -513,8 +524,21 @@ async function main() {
     if (!Array.isArray(data) || data.length >= 100) throw Error("comment-limit");
     return data;
   };
+  const git = (...args) =>
+    execFileSync("git", ["-C", site, ...args], {
+      encoding: "utf8",
+      timeout: 120000,
+      stdio: ["ignore", "pipe", "pipe"],
+      env: {
+        ...process.env,
+        GIT_TERMINAL_PROMPT: "0",
+        GIT_CONFIG_COUNT: "1",
+        GIT_CONFIG_KEY_0: "http.https://github.com/.extraheader",
+        GIT_CONFIG_VALUE_0: `AUTHORIZATION: basic ${Buffer.from(`x-access-token:${token}`).toString("base64")}`,
+      },
+    }).trimEnd();
   const reportedOutcomes = new Map();
-  const report = async (input, status, source, slug) => {
+  const report = async (input, status, source, slug, { liveVerified = false } = {}) => {
     if (!(await current(input))) return false;
     const all = await comments(input.number);
     const prior = all.find(
@@ -531,6 +555,22 @@ async function main() {
         { body },
       );
     reportedOutcomes.set(input.number, status);
+    const candidateUrl =
+      liveVerified && slug && locales.includes(input.locale)
+        ? `${base}/${input.locale}/candidates/${slug}/`
+        : undefined;
+    const record = createResultRecord({
+      issue: input.number,
+      version: input.version,
+      status,
+      observedAt: new Date().toISOString(),
+      candidateUrl,
+      liveVerified,
+    });
+    const projections = JSON.parse(fs.readFileSync(resultQueueFile, "utf8"));
+    if (!Array.isArray(projections)) throw Error("invalid-result-projection-queue");
+    projections.push(record);
+    fs.writeFileSync(resultQueueFile, `${JSON.stringify(projections)}\n`, { mode: 0o600 });
     return true;
   };
   const live = async (item) => {
@@ -567,8 +607,8 @@ async function main() {
   };
   if (process.argv[2] === "finish") {
     executionStage = "finish";
-    if (!fs.existsSync(stateFile)) return;
-    const items = JSON.parse(fs.readFileSync(stateFile, "utf8"));
+    const items = fs.existsSync(stateFile) ? JSON.parse(fs.readFileSync(stateFile, "utf8")) : [];
+    if (!Array.isArray(items)) throw Error("invalid-pending-review-state");
     for (const item of items) {
       let verified = false;
       if (process.env.DEPLOY_RESULT === "success") {
@@ -587,23 +627,49 @@ async function main() {
         verified ? "published" : "deployment-pending",
         item.source,
         item.slug,
+        { liveVerified: verified },
       );
     }
+    const projections = JSON.parse(fs.readFileSync(resultQueueFile, "utf8"));
+    if (!Array.isArray(projections)) throw Error("invalid-result-projection-queue");
+    let snapshotNeedsDeployment = false;
+    const snapshotFile = path.join(site, "cloud-suggestion-results.json");
+    if (projections.length) {
+      const prior = fs.existsSync(snapshotFile)
+        ? validateResultSnapshot(JSON.parse(fs.readFileSync(snapshotFile, "utf8")))
+        : null;
+      const snapshot = mergeResultSnapshot(prior, projections, new Date().toISOString());
+      const content = `${JSON.stringify(snapshot, null, 2)}\n`;
+      if (!fs.existsSync(snapshotFile) || fs.readFileSync(snapshotFile, "utf8") !== content) {
+        if (git("status", "--porcelain", "--untracked-files=all"))
+          throw Error("site-checkout-dirty");
+        fs.writeFileSync(snapshotFile, content);
+        const files = changedPaths(git("status", "--porcelain", "--untracked-files=all"));
+        if (files.length !== 1 || files[0] !== "cloud-suggestion-results.json")
+          throw Error("unexpected-result-snapshot-file");
+        git("add", "--", "cloud-suggestion-results.json");
+        git(
+          "-c",
+          "user.name=github-actions[bot]",
+          "-c",
+          "user.email=41898282+github-actions[bot]@users.noreply.github.com",
+          "commit",
+          "-m",
+          "Publish public suggestion result snapshot",
+        );
+        git("push", "origin", `HEAD:refs/heads/${branch}`);
+        snapshotNeedsDeployment = true;
+      }
+      if (!snapshotNeedsDeployment)
+        snapshotNeedsDeployment = await snapshotDeploymentNeeded(snapshot, fetch);
+    } else if (fs.existsSync(snapshotFile)) {
+      const snapshot = validateResultSnapshot(JSON.parse(fs.readFileSync(snapshotFile, "utf8")));
+      snapshotNeedsDeployment = await snapshotDeploymentNeeded(snapshot, fetch);
+    }
+    if (process.env.GITHUB_OUTPUT)
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `snapshot_deploy=${snapshotNeedsDeployment}\n`);
     return;
   }
-  const git = (...args) =>
-    execFileSync("git", ["-C", site, ...args], {
-      encoding: "utf8",
-      timeout: 120000,
-      stdio: ["ignore", "pipe", "pipe"],
-      env: {
-        ...process.env,
-        GIT_TERMINAL_PROMPT: "0",
-        GIT_CONFIG_COUNT: "1",
-        GIT_CONFIG_KEY_0: "http.https://github.com/.extraheader",
-        GIT_CONFIG_VALUE_0: `AUTHORIZATION: basic ${Buffer.from(`x-access-token:${token}`).toString("base64")}`,
-      },
-    }).trimEnd();
   if (git("status", "--porcelain")) throw Error("site-checkout-dirty");
   const templates = Object.fromEntries(
     locales.map((locale) => [
@@ -805,7 +871,7 @@ async function main() {
           /* An obsolete pending acceptance must not be redeployed. */
         }
         if (alreadyLive) {
-          await report(input, "existing", decision.source, decision.slug);
+          await report(input, "existing", decision.source, decision.slug, { liveVerified: true });
           continue;
         }
         await report(input, hold);
@@ -828,7 +894,9 @@ async function main() {
         /* Redeploy only an audited prior acceptance. */
       }
       if (verified)
-        await report(input, recovered ? "published" : "existing", decision.source, decision.slug);
+        await report(input, recovered ? "published" : "existing", decision.source, decision.slug, {
+          liveVerified: true,
+        });
       else if (recovered) {
         pending.push(item);
         await report(input, "deployment-pending");

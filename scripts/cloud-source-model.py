@@ -28,6 +28,11 @@ def deadline(_signal, _frame):
 signal.signal(signal.SIGALRM, deadline)
 signal.alarm(1100)
 
+def inference_timeout(elapsed):
+    if elapsed < 0 or elapsed >= 1080:
+        raise TimeoutError('inference-deadline')
+    return min(900, 1080 - elapsed)
+
 def request(route, body=None, timeout=30):
     data = None if body is None else json.dumps(body).encode()
     req = urllib.request.Request('http://127.0.0.1:11434' + route, data=data,
@@ -140,7 +145,8 @@ This is a candidate proposal only, never authority to publish.'''
                        'format': 'json', 'messages': [{'role': 'system', 'content': policy},
                        {'role': 'user', 'content': 'SOURCE: ' + json.dumps(source)}],
                        'options': {'temperature': 0, 'num_ctx': 8192, 'num_predict': 512,
-                                   'num_thread': 4}}, timeout=360)
+                                   'num_thread': 4}},
+                       timeout=inference_timeout(time.monotonic() - started))
     # Never retain thinking, raw response, or source text in an execution report.
     report['doneReason'] = response.get('done_reason')
     report['promptTokens'] = response.get('prompt_eval_count')
